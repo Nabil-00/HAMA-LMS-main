@@ -1,0 +1,7 @@
+{
+  "name": "HAMA LMS Enterprise (RBAC)",
+  "description": "A world-class enterprise Learning Management System focusing on scalable instructional design and course authoring.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

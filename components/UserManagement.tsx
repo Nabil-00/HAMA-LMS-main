@@ -37,8 +37,8 @@ const UserModal = ({ user, onClose, onSave }: { user: UserProfile | null, onClos
                             <User size={20} />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold text-hama-gold serif italic">{user ? 'Edit Artist Profile' : 'New Member Registration'}</h3>
-                            <p className="text-[9px] text-text-muted uppercase tracking-[0.2em] font-black mt-1">HAMA Studio Ledger</p>
+                            <h3 className="text-xl font-bold text-hama-gold serif italic">{user ? 'Edit User' : 'Add New User'}</h3>
+                            <p className="text-[9px] text-text-muted uppercase tracking-[0.2em] font-black mt-1">HAMA Users</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="text-text-muted hover:text-text-primary transition-colors">
@@ -50,12 +50,12 @@ const UserModal = ({ user, onClose, onSave }: { user: UserProfile | null, onClos
                 <form className="p-8 space-y-6 relative z-10" onSubmit={(e) => { e.preventDefault(); onSave(formData); }}>
                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] ml-1">Full Name</label>
+                            <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] ml-1">Name</label>
                             <input
                                 value={formData.name || ''}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                 className="w-full px-5 py-4 bg-white/2 border border-white/10 rounded-2xl focus:border-hama-gold outline-none text-text-primary text-sm transition-all"
-                                placeholder="Artist Name"
+                                placeholder="Enter name"
                                 required
                             />
                         </div>
@@ -71,7 +71,7 @@ const UserModal = ({ user, onClose, onSave }: { user: UserProfile | null, onClos
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] ml-1">Studio Role</label>
+                            <label className="text-[9px] font-black text-text-muted uppercase tracking-[0.3em] ml-1">Role</label>
                             <select
                                 value={formData.role || 'Student'}
                                 onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
@@ -79,7 +79,7 @@ const UserModal = ({ user, onClose, onSave }: { user: UserProfile | null, onClos
                             >
                                 <option value="Admin" className="bg-bg-secondary">Administrator</option>
                                 <option value="Teacher" className="bg-bg-secondary">Instructor</option>
-                                <option value="Student" className="bg-bg-secondary">Student Artist</option>
+                                <option value="Student" className="bg-bg-secondary">Student</option>
                             </select>
                         </div>
                     </div>
@@ -88,7 +88,7 @@ const UserModal = ({ user, onClose, onSave }: { user: UserProfile | null, onClos
                         type="submit"
                         className="w-full py-5 bg-hama-gold text-black font-black text-[10px] uppercase tracking-[0.3em] rounded-2xl shadow-xl shadow-hama-gold/10 hover:bg-text-primary transition-all transform active:scale-95"
                     >
-                        {user ? 'Update Studio Record' : 'Register Member'}
+                        {user ? 'Update User Record' : 'Register User'}
                     </button>
                 </form>
             </div>
@@ -138,7 +138,7 @@ const EnrollmentModal = ({ user, onClose }: { user: UserProfile, onClose: () => 
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl p-4 animate-in fade-in duration-300">
-            <div className="w-full max-w-2xl glass border-hama-gold/10 bg-bg-secondary overflow-hidden animate-in zoom-in-95 duration-300 relative">
+            <div className="w-full max-w-2xl glass border-hama-gold/10 bg-bg-secondary overflow-hidden animate-in zoom-in-95 duration-300 relative max-h-[90vh] flex flex-col">
                 <div className="p-8 border-b border-white/5 flex items-center justify-between relative z-10">
                     <div className="flex items-center gap-4">
                         <div className="p-2.5 bg-hama-gold text-black rounded-xl">
@@ -146,7 +146,7 @@ const EnrollmentModal = ({ user, onClose }: { user: UserProfile, onClose: () => 
                         </div>
                         <div>
                             <h3 className="text-xl font-bold text-hama-gold serif italic">Studio Enrollment</h3>
-                            <p className="text-[9px] text-text-muted uppercase tracking-[0.2em] font-black mt-1">{user?.name} — Induction Status</p>
+                            <p className="text-[9px] text-text-muted uppercase tracking-[0.2em] font-black mt-1">{user?.name} — Enrollment Status</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="text-text-muted hover:text-text-primary transition-colors">
@@ -155,12 +155,12 @@ const EnrollmentModal = ({ user, onClose }: { user: UserProfile, onClose: () => 
                 </div>
                 <div className="noise opacity-10" />
 
-                <div className="p-8 max-h-[60vh] overflow-y-auto space-y-8 relative z-10">
+                <div className="p-4 md:p-8 overflow-y-auto space-y-8 relative z-10">
                     <div className="space-y-4">
                         <h4 className="text-[10px] font-black text-text-muted uppercase tracking-[0.4em] ml-1">Active Programs</h4>
                         {enrollments.length === 0 ? (
                             <div className="p-10 text-center border border-dashed border-white/5 rounded-2xl">
-                                <p className="text-text-muted/10 text-[10px] font-black uppercase tracking-widest italic">No active curriculum enrollments detected</p>
+                                <p className="text-text-muted/10 text-[10px] font-black uppercase tracking-widest italic">No active course enrollments found</p>
                             </div>
                         ) : (
                             <div className="space-y-3">
@@ -252,7 +252,7 @@ const UserManagement: React.FC = () => {
                 addToast("Artist profile updated", "success");
             } else {
                 await createUser(userData);
-                addToast("New member added to ledger", "success");
+                addToast("New user added successfully", "success");
             }
             setIsModalOpen(false);
             loadUsers();
@@ -266,9 +266,9 @@ const UserManagement: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
                 <div>
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-hama-gold/5 border border-hama-gold/10 text-hama-gold text-[10px] font-bold uppercase tracking-[0.3em] mb-4">
-                        Staff Ledger
+                        Staff List
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-bold serif text-text-primary">Artists & Staff</h1>
+                    <h1 className="text-4xl md:text-5xl font-bold serif text-text-primary">Users & Staff</h1>
                     <p className="text-text-secondary mt-4 max-w-lg leading-relaxed font-light">Manage Academy personnel, instructor assignments, and student enrollments for HAMA Studio.</p>
                 </div>
 
@@ -277,7 +277,7 @@ const UserManagement: React.FC = () => {
                         onClick={() => { setSelectedUser(null); setIsModalOpen(true); }}
                         className="flex items-center gap-3 px-8 py-4 bg-hama-gold text-black rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-hama-gold/10 hover:bg-text-primary transition-all font-sans"
                     >
-                        <Plus size={16} /> Add Member
+                        <Plus size={16} /> Add User
                     </button>
                 </div>
             </div>
@@ -288,7 +288,7 @@ const UserManagement: React.FC = () => {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-hama-gold transition-colors" size={16} />
                     <input
                         type="text"
-                        placeholder="Search by name or studio email..."
+                        placeholder="Search by name or email..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-12 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-[11px] font-bold uppercase tracking-widest text-text-primary focus:ring-1 focus:ring-hama-gold/30 outline-none placeholder:text-white/10 transition-all font-sans"
@@ -322,10 +322,10 @@ const UserManagement: React.FC = () => {
                     <table className="w-full text-left">
                         <thead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted border-b border-white/5">
                             <tr>
-                                <th className="px-8 py-5">Identified Member</th>
-                                <th className="px-8 py-5">Studio Role</th>
-                                <th className="px-8 py-5">Status</th>
-                                <th className="px-8 py-5 text-right">Actions</th>
+                                <th className="px-4 md:px-8 py-5">User</th>
+                                <th className="px-4 md:px-8 py-5">Role</th>
+                                <th className="px-4 md:px-8 py-5">Status</th>
+                                <th className="px-4 md:px-8 py-5 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -344,21 +344,21 @@ const UserManagement: React.FC = () => {
                                 </tr>
                             ) : filteredUsers.map((u) => (
                                 <tr key={u.id} className="group hover:bg-white/2 transition-colors">
-                                    <td className="px-8 py-6">
+                                    <td className="px-4 md:px-8 py-6">
                                         <div className="flex items-center gap-4">
-                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg ${u.role === 'Admin' ? 'bg-hama-gold text-black' :
+                                            <div className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center font-bold text-base md:text-lg ${u.role === 'Admin' ? 'bg-hama-gold text-black' :
                                                 u.role === 'Teacher' ? 'bg-white/10 text-text-primary' :
                                                     'bg-white/5 text-text-muted'
                                                 }`}>
                                                 {getInitials(u.name || u.email || 'U')}
                                             </div>
-                                            <div>
-                                                <p className="font-bold text-text-primary serif">{u.name || 'Anonymous Artist'}</p>
-                                                <p className="text-[11px] text-text-muted">{u.email}</p>
+                                            <div className="min-w-0">
+                                                <p className="font-bold text-text-primary serif truncate">{u.name || 'Anonymous User'}</p>
+                                                <p className="text-[11px] text-text-muted truncate">{u.email}</p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-6">
+                                    <td className="px-4 md:px-8 py-6">
                                         <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${u.role === 'Admin' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
                                             u.role === 'Teacher' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
                                                 'bg-white/5 text-text-secondary border-white/10'
@@ -366,24 +366,24 @@ const UserManagement: React.FC = () => {
                                             {u.role === 'Teacher' ? 'Instructor' : u.role}
                                         </span>
                                     </td>
-                                    <td className="px-8 py-6">
+                                    <td className="px-4 md:px-8 py-6">
                                         <div className="flex items-center gap-2 text-emerald-400">
                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                                             <span className="text-[10px] font-black uppercase tracking-widest font-sans">Active</span>
                                         </div>
                                     </td>
-                                    <td className="px-8 py-6 text-right">
-                                        <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <td className="px-4 md:px-8 py-6 text-right">
+                                        <div className="flex items-center justify-end gap-2 md:gap-3 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={() => { setSelectedUser(u); setIsEnrollModalOpen(true); }}
-                                                className="p-3 bg-white/5 border border-white/10 text-text-muted hover:text-hama-gold hover:border-hama-gold/30 rounded-xl transition-all"
+                                                className="p-2 md:p-3 bg-white/5 border border-white/10 text-text-muted hover:text-hama-gold hover:border-hama-gold/30 rounded-xl transition-all"
                                                 title="Manage Enrollments"
                                             >
                                                 <GraduationCap size={16} />
                                             </button>
                                             <button
                                                 onClick={() => { setSelectedUser(u); setIsModalOpen(true); }}
-                                                className="p-3 bg-white/5 border border-white/10 text-text-muted hover:text-text-primary hover:border-white/30 rounded-xl transition-all"
+                                                className="p-2 md:p-3 bg-white/5 border border-white/10 text-text-muted hover:text-text-primary hover:border-white/30 rounded-xl transition-all"
                                                 title="Edit Profile"
                                             >
                                                 <ShieldCheck size={16} />

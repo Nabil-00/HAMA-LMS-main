@@ -31,16 +31,16 @@ const TranslationManager: React.FC<TranslationManagerProps> = ({
   const [isAdding, setIsAdding] = useState(false);
 
   return (
-    <div className="bg-bg-primary border-b border-hama-gold/10 px-8 py-3 flex items-center justify-between z-20 sticky top-0 backdrop-blur-xl">
-      <div className="flex items-center gap-6">
+    <div className="bg-bg-primary border-b border-hama-gold/10 px-4 md:px-8 py-4 md:py-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 z-20 sticky top-0 backdrop-blur-xl">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6 w-full md:w-auto">
         <div className="flex items-center gap-2 text-text-muted font-black text-[10px] uppercase tracking-[0.2em]">
           <Languages size={14} className="text-hama-gold" />
           <span className="font-sans">Translation Center</span>
         </div>
 
-        <div className="h-4 w-px bg-white/5"></div>
+        <div className="hidden md:block h-4 w-px bg-white/5"></div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2 md:gap-3">
           {supportedLocales.map(code => {
             const localeInfo = AVAILABLE_LOCALES.find(l => l.code === code) || { code, name: code, flag: '🌐' };
             const isActive = currentLocale === code;

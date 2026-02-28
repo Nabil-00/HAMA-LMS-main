@@ -32,7 +32,8 @@ import {
     Clock,
     Trash2,
     Copy,
-    ChevronUp
+    ChevronUp,
+    X
 } from 'lucide-react';
 import TranslationManager from './TranslationManager';
 import VersionControlPanel from './VersionControlPanel';
@@ -84,6 +85,59 @@ const CourseBuilder: React.FC = () => {
     const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
     const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
     const [showVersionPanel, setShowVersionPanel] = useState(false);
+    const [showLessonEditor, setShowLessonEditor] = useState(false);
+
+    // Auto-create module and lesson for new courses
+    useEffect(() => {
+        if (course.modules.length === 0) {
+            const newModule: Module = {
+                id: `mod-${Date.now()}`,
+                title: 'Module 1',
+                lessons: [],
+                localizations: {}
+            };
+            setCourse({ ...course, modules: [newModule] });
+            setActiveModuleId(newModule.id);
+        }
+    }, []);
+
+    // Auto-select first lesson when module is selected
+    useEffect(() => {
+        if (activeModuleId) {
+            const module = course.modules.find((m: Module) => m.id === activeModuleId);
+            if (module && module.lessons.length > 0 && !activeLessonId) {
+                setActiveLessonId(module.lessons[0].id);
+            }
+        }
+    }, [activeModuleId, course.modules]);
+
+    // Auto-create first lesson when module has no lessons
+    useEffect(() => {
+        if (activeModuleId && course.modules.length > 0) {
+            const module = course.modules.find((m: Module) => m.id === activeModuleId);
+            if (module && module.lessons.length === 0) {
+                const newLesson: Lesson = {
+                    id: `less-${Date.now()}`,
+                    title: 'Lesson 1',
+                    type: ContentType.TEXT,
+                    durationMinutes: 10,
+                    content: '',
+                    metadata: {},
+                    localizations: {},
+                    prerequisiteIds: []
+                };
+                const updatedModules = course.modules.map((m: Module) => {
+                    if (m.id === activeModuleId) {
+                        return { ...m, lessons: [newLesson] };
+                    }
+                    return m;
+                });
+                setCourse({ ...course, modules: updatedModules });
+                setActiveLessonId(newLesson.id);
+            }
+        }
+    }, [activeModuleId, course.modules]);
+
     const [viewMode, setViewMode] = useState<'curriculum' | 'settings'>('curriculum');
     const [isUploading, setIsUploading] = useState(false);
 
@@ -145,7 +199,7 @@ const CourseBuilder: React.FC = () => {
             modules: course.modules.filter((m: Module) => m.id !== moduleId)
         });
         if (activeModuleId === moduleId) setActiveModuleId(null);
-        addToast("Module removed from curriculum.", 'info');
+        addToast("Module removed.", 'info');
     };
 
     const addLesson = (moduleId: string) => {
@@ -454,7 +508,7 @@ const CourseBuilder: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-8rem)] glass rounded-3xl overflow-hidden border border-hama-gold/10 shadow-glass animate-in fade-in duration-700">
+        <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-8rem)] glass rounded-2xl md:rounded-3xl overflow-hidden border border-hama-gold/10 shadow-glass animate-in fade-in duration-700">
 
             {/* Localization Integration */}
             <TranslationManager
@@ -467,7 +521,7 @@ const CourseBuilder: React.FC = () => {
             />
 
             {/* Builder Header */}
-            <div className="h-20 border-b border-hama-gold/5 flex items-center justify-between px-10 bg-bg-primary/40 backdrop-blur-md">
+            <div className="flex flex-col md:flex-row h-auto md:h-20 border-b border-hama-gold/5 items-center justify-between px-6 md:px-10 py-4 md:py-0 bg-bg-primary/40 backdrop-blur-md gap-4 z-20 md:z-30">
                 <div className="flex items-center gap-6">
                     <button
                         onClick={() => navigate('/courses')}
@@ -481,7 +535,7 @@ const CourseBuilder: React.FC = () => {
                             dir={isRTL ? 'rtl' : 'ltr'}
                             value={getLocalized(course, 'title') || ''}
                             onChange={(e) => updateCourseField('title', e.target.value)}
-                            placeholder={isDefaultLocale ? "Blueprint Title" : `Blueprint Title (${currentLocale})`}
+                            placeholder={isDefaultLocale ? "Course Title" : `Course Title (${currentLocale})`}
                             className={`text-[18px] font-black uppercase tracking-[0.3em] focus:outline-none focus:ring-1 focus:ring-gold/30 rounded px-1 -ml-1 ${transparentInputClass}`}
                         />
                         <div className="text-[10px] font-bold text-white/20 uppercase tracking-widest mt-1 flex items-center gap-3">
@@ -496,22 +550,22 @@ const CourseBuilder: React.FC = () => {
                             <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-hama-gold text-black">
                                 {course.status}
                             </span>
-                            {isDefaultLocale ? <span className="text-text-muted">Master Frequency</span> : <span className="text-hama-gold/60 font-black">Localized Resonance</span>}
+                            {isDefaultLocale ? <span className="text-text-muted">Default Language</span> : <span className="text-hama-gold/60 font-black">Localized Content</span>}
                         </div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5 mr-4">
+                <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 md:gap-4 w-full md:w-auto mt-2 md:mt-0">
+                    <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5 order-1">
                         <button
                             onClick={() => setViewMode('curriculum')}
-                            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'curriculum' ? 'bg-hama-gold text-black shadow-lg shadow-hama-gold/20' : 'text-text-muted hover:text-white'}`}
+                            className={`px-4 md:px-6 py-2 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'curriculum' ? 'bg-hama-gold text-black shadow-lg shadow-hama-gold/20' : 'text-text-muted hover:text-white'}`}
                         >
-                            Curriculum
+                            Course
                         </button>
                         <button
                             onClick={() => setViewMode('settings')}
-                            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'settings' ? 'bg-hama-gold text-black shadow-lg shadow-hama-gold/20' : 'text-text-muted hover:text-white'}`}
+                            className={`px-4 md:px-6 py-2 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'settings' ? 'bg-hama-gold text-black shadow-lg shadow-hama-gold/20' : 'text-text-muted hover:text-white'}`}
                         >
                             Settings
                         </button>
@@ -519,37 +573,37 @@ const CourseBuilder: React.FC = () => {
 
                     <button
                         onClick={() => setShowVersionPanel(true)}
-                        className="flex items-center gap-3 px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary hover:text-hama-gold transition-all"
+                        className="hidden md:flex items-center gap-2 md:gap-3 px-4 md:px-6 py-2 md:py-3 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary hover:text-hama-gold transition-all order-2"
                     >
                         <History size={16} />
-                        History Echo
+                        <span className="hidden lg:inline">History</span>
                     </button>
 
                     <button
                         onClick={handleSaveDraft}
-                        className="flex items-center gap-3 px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary hover:text-hama-gold transition-all bg-white/5 rounded-xl border border-white/10"
+                        className="flex items-center gap-2 px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary hover:text-hama-gold transition-all bg-white/5 rounded-xl border border-white/10 order-3"
                     >
                         <Save size={16} />
-                        Save Fragment
+                        <span className="hidden sm:inline">Save</span>
                     </button>
 
                     <button
                         onClick={() => setShowVersionPanel(true)}
-                        className="flex items-center gap-3 px-8 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] text-black bg-hama-gold rounded-2xl hover:shadow-[0_0_30px_rgba(242,201,76,0.3)] transition-all"
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 md:gap-3 px-6 md:px-10 py-3 md:py-4 text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em] text-black bg-hama-gold rounded-2xl hover:shadow-[0_0_40px_rgba(242,201,76,0.4)] hover:bg-[#FADC7A] active:scale-95 transition-all pulse-glow order-4"
                     >
-                        <UploadCloud size={16} />
-                        Crystalize Sequence
+                        <UploadCloud size={18} />
+                        Publish
                     </button>
                 </div>
             </div>
 
-            <div className="flex flex-1 overflow-hidden">
-                {/* Sidebar: Structure */}
-                <div className="w-96 border-r border-hama-gold/10 bg-bg-primary/40 flex flex-col relative z-20">
+            <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+                {/* Sidebar: Structure - Fixed width, scrollable */}
+                <div className="w-full lg:w-96 min-h-[35vh] lg:min-h-0 lg:h-full flex-shrink-0 border-b lg:border-b-0 lg:border-r border-hama-gold/10 bg-bg-primary/40 flex flex-col relative z-30 overflow-hidden">
                     <div className="p-8 flex justify-between items-center border-b border-white/5 bg-white/2">
                         <h3 className="text-[11px] font-black text-text-muted uppercase tracking-[0.3em] flex items-center gap-3">
                             <ListChecks size={16} className="text-hama-gold/40" />
-                            Curriculum Map
+                            Course Structure
                         </h3>
                         {isDefaultLocale && (
                             <button onClick={addModule} className="p-2 hover:bg-hama-gold/10 rounded-xl text-text-muted hover:text-hama-gold transition-all border border-transparent hover:border-hama-gold/20">
@@ -561,7 +615,7 @@ const CourseBuilder: React.FC = () => {
                     <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin">
                         {(course.modules || []).length === 0 && (
                             <div className="text-center py-20 px-8 text-white/10 font-black uppercase tracking-[0.2em] text-[10px] italic">
-                                Empty Array: Initialize Module
+                                No Modules Yet: Add a Module
                             </div>
                         )}
 
@@ -614,7 +668,7 @@ const CourseBuilder: React.FC = () => {
                                             {(module.lessons || []).map((lesson) => (
                                                 <div
                                                     key={lesson.id}
-                                                    onClick={() => setActiveLessonId(lesson.id)}
+                                                    onClick={() => { setActiveLessonId(lesson.id); setShowLessonEditor(true); }}
                                                     className={`pl-10 pr-4 py-3 flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest cursor-pointer border-l-2 transition-all group/less ${activeLessonId === lesson.id
                                                         ? 'border-hama-gold bg-hama-gold/5 text-hama-gold shadow-[inset_4px_0_10px_-4px_rgba(242,201,76,1)]'
                                                         : 'border-transparent hover:bg-white/5 text-text-muted hover:text-text-secondary'
@@ -669,7 +723,7 @@ const CourseBuilder: React.FC = () => {
                                                 onClick={(e) => { e.stopPropagation(); addLesson(module.id); }}
                                                 className="w-full text-left pl-10 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-hama-gold/40 hover:text-hama-gold hover:bg-hama-gold/5 transition-all flex items-center gap-2 border-t border-white/5 relative z-10"
                                             >
-                                                <Plus size={12} /> Add Fragment
+                                                <Plus size={12} /> Add Lesson
                                             </button>
                                         )}
                                     </div>
@@ -680,36 +734,37 @@ const CourseBuilder: React.FC = () => {
                 </div>
 
                 {/* Main Editor Area */}
-                <div className="flex-1 bg-black/20 overflow-y-auto scrollbar-none">
-                    {viewMode === 'settings' ? (
-                        /* COURSE SETTINGS VIEW */
-                        <div className="max-w-4xl mx-auto py-16 px-12 animate-in fade-in duration-500 space-y-12">
-                            <div className="bento-card border-hama-gold/10 p-10">
-                                <h3 className="text-[12px] font-black uppercase tracking-[0.3em] text-text-primary mb-8 flex items-center gap-3">
-                                    <Settings size={18} className="text-hama-gold" />
-                                    Global Course Blueprint
-                                </h3>
-
-                                <div className="space-y-8">
-                                    {/* Thumbnail Upload */}
-                                    <div className="space-y-4">
-                                        <label className="block text-[10px] font-black text-text-muted uppercase tracking-widest ml-1">Transmission Visual (Thumbnail)</label>
-                                        <div className="flex gap-8 items-start">
-                                            <div className="w-64 aspect-video bg-white/5 border border-white/10 rounded-3xl overflow-hidden flex items-center justify-center relative group">
+                <div className="flex-1 bg-black/20 overflow-y-auto scrollbar-none overflow-x-hidden">
+                    {viewMode === 'curriculum' && (
+                        <div className="max-w-5xl mx-auto py-6 md:py-8 px-4 md:px-8 space-y-6 md:space-y-8">
+                            {/* Fast Thumbnail & Meta Section */}
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                <div className="lg:col-span-2 space-y-6">
+                                    <div className="bento-card p-8 border-hama-gold/10">
+                                        <div className="flex justify-between items-center mb-6">
+                                            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-hama-gold">Quick Thumbnail</h3>
+                                            {course.thumbnailUrl && <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">Active</span>}
+                                        </div>
+                                        <div className="flex flex-col md:flex-row gap-8 items-start">
+                                            <div className="w-full md:w-64 aspect-video bg-white/5 border border-white/10 rounded-2xl md:rounded-3xl overflow-hidden flex items-center justify-center relative group shadow-2xl">
                                                 {course.thumbnailUrl ? (
-                                                    <img src={course.thumbnailUrl} alt="Course Thumbnail" className="w-full h-full object-cover" />
+                                                    <img src={course.thumbnailUrl} alt="Course Thumbnail" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                                 ) : (
-                                                    <UploadCloud size={32} className="text-white/10" />
+                                                    <UploadCloud size={32} className="text-white/10 group-hover:text-hama-gold/30 transition-colors" />
                                                 )}
                                                 {isUploading && (
-                                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                                        <div className="w-6 h-6 border-2 border-hama-gold border-t-transparent rounded-full animate-spin" />
+                                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-20">
+                                                        <div className="w-8 h-8 border-2 border-hama-gold border-t-transparent rounded-full animate-spin" />
                                                     </div>
                                                 )}
+                                                <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <p className="text-[9px] font-black text-white uppercase tracking-widest text-center">Update Course Visual</p>
+                                                </div>
                                             </div>
-                                            <div className="flex flex-col gap-3">
-                                                <label className="px-6 py-3 bg-white/5 hover:bg-hama-gold hover:text-black border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer transition-all active:scale-95">
-                                                    {course.thumbnailUrl ? 'Change Visual' : 'Upload Visual'}
+                                            <div className="flex flex-col gap-3 w-full md:w-auto">
+                                                <label className="flex items-center justify-center gap-3 px-6 py-4 bg-hama-gold/10 hover:bg-hama-gold text-hama-gold hover:text-black border border-hama-gold/20 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer transition-all active:scale-95">
+                                                    <UploadCloud size={16} />
+                                                    {course.thumbnailUrl ? 'Change Art' : 'Select Art'}
                                                     <input
                                                         type="file"
                                                         hidden
@@ -720,21 +775,53 @@ const CourseBuilder: React.FC = () => {
                                                 {course.thumbnailUrl && (
                                                     <button
                                                         onClick={() => setCourse({ ...course, thumbnailUrl: '' })}
-                                                        className="px-6 py-3 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                                        className="px-6 py-4 bg-white/5 text-red-400/60 hover:text-red-400 hover:bg-red-400/10 border border-white/5 hover:border-red-400/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                                                     >
-                                                        Purge Visual
+                                                        Remove
                                                     </button>
                                                 )}
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                                <div className="bento-card p-8 border-hama-gold/10 hidden lg:block">
+                                    <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-hama-gold mb-6">Course Stats</h3>
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-center text-[10px] uppercase tracking-widest font-black">
+                                            <span className="text-text-muted">Modules</span>
+                                            <span className="text-text-primary">{course.modules.length}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-[10px] uppercase tracking-widest font-black">
+                                            <span className="text-text-muted">Lessons</span>
+                                            <span className="text-text-primary">{course.modules.reduce((acc, m) => acc + m.lessons.length, 0)}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-[10px] uppercase tracking-widest font-black">
+                                            <span className="text-text-muted">Duration</span>
+                                            <span className="text-text-primary">{course.modules.reduce((acc, m) => acc + m.lessons.reduce((lAcc, l) => lAcc + l.durationMinutes, 0), 0)} min</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {viewMode === 'settings' ? (
+                        /* COURSE SETTINGS VIEW */
+                        <div className="max-w-4xl mx-auto py-8 md:py-16 px-4 md:px-12 animate-in fade-in duration-500 space-y-8 md:space-y-12">
+                            <div className="bento-card border-hama-gold/10 p-6 md:p-10">
+                                <h3 className="text-[12px] font-black uppercase tracking-[0.3em] text-text-primary mb-8 flex items-center gap-3">
+                                    <Settings size={18} className="text-hama-gold" />
+                                    Course Settings
+                                </h3>
+
+                                <div className="space-y-8">
 
                                     {/* Description */}
                                     <div className="space-y-4">
-                                        <label className="block text-[10px] font-black text-text-muted uppercase tracking-widest ml-1">Archive Summary ({currentLocale})</label>
+                                        <label className="block text-[10px] font-black text-text-muted uppercase tracking-widest ml-1">Course Summary ({currentLocale})</label>
                                         <textarea
                                             className={`w-full h-48 p-6 rounded-3xl text-[13px] leading-relaxed ${inputBaseClass}`}
-                                            placeholder="Enter high-fidelity course description..."
+                                            placeholder="Enter course description..."
                                             value={getLocalized(course, 'description') || ''}
                                             onChange={(e) => updateCourseField('description', e.target.value)}
                                         ></textarea>
@@ -742,7 +829,7 @@ const CourseBuilder: React.FC = () => {
 
                                     {/* Tags */}
                                     <div className="space-y-4">
-                                        <label className="block text-[10px] font-black text-text-muted uppercase tracking-widest ml-1">Frequency Tags</label>
+                                        <label className="block text-[10px] font-black text-text-muted uppercase tracking-widest ml-1">Course Tags</label>
                                         <div className="flex flex-wrap gap-2 p-4 bg-white/2 border border-white/5 rounded-2xl min-h-[100px]">
                                             {(course.tags || []).map(tag => (
                                                 <span key={tag} className="px-4 py-2 bg-hama-gold/10 text-hama-gold border border-hama-gold/20 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2 group">
@@ -752,7 +839,7 @@ const CourseBuilder: React.FC = () => {
                                             ))}
                                             <input
                                                 className="bg-transparent border-none outline-none text-[10px] font-black uppercase tracking-widest text-white/40 min-w-[200px]"
-                                                placeholder="+ Add Resonance Tag..."
+                                                placeholder="+ Add Tag..."
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') {
                                                         addTag(e.currentTarget.value);
@@ -774,18 +861,18 @@ const CourseBuilder: React.FC = () => {
                                         <PenTool size={24} />
                                     </div>
                                     <div>
-                                        <h3 className="text-[12px] font-black uppercase tracking-[0.3em] text-text-primary">Segment Parameterization</h3>
-                                        <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mt-1">Configure Archive metadata for frequency {currentLocale}</p>
+                                        <h3 className="text-[12px] font-black uppercase tracking-[0.3em] text-text-primary">Lesson Configuration</h3>
+                                        <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mt-1">Configure lesson metadata for language: {currentLocale}</p>
                                     </div>
                                 </div>
 
                                 <div className="space-y-6 relative z-10">
                                     <div>
-                                        <label className="block text-[10px] font-black text-text-secondary uppercase tracking-[0.2em] mb-3 ml-1">Archive Title</label>
+                                        <label className="block text-[10px] font-black text-text-secondary uppercase tracking-[0.2em] mb-3 ml-1">Lesson Title</label>
                                         <input
                                             dir={isRTL ? 'rtl' : 'ltr'}
                                             className={`w-full p-5 glass border border-white/10 rounded-2xl text-[14px] font-black uppercase tracking-[0.1em] text-text-primary focus:ring-1 focus:ring-hama-gold/30 outline-none ${transparentInputClass}`}
-                                            placeholder="Execute title protocol..."
+                                            placeholder="Enter lesson title..."
                                             value={getLocalized(activeLesson, 'title') || ''}
                                             onChange={(e) => updateLessonField('title', e.target.value)}
                                         />
@@ -794,17 +881,17 @@ const CourseBuilder: React.FC = () => {
                                     {/* Type Selector Grid (Only available in Default Locale) */}
                                     {isDefaultLocale ? (
                                         <div className="mt-8">
-                                            <label className="block text-[10px] font-black text-text-secondary uppercase tracking-[0.2em] mb-4 ml-1">Transmission Medium</label>
+                                            <label className="block text-[10px] font-black text-text-secondary uppercase tracking-[0.2em] mb-4 ml-1">Content Type</label>
                                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
                                                 {[
-                                                    { type: ContentType.TEXT, label: 'Codex', icon: FileText },
-                                                    { type: ContentType.VIDEO_VOD, label: 'Vis-Stream', icon: Video },
-                                                    { type: ContentType.VIDEO_LIVE, label: 'Real-Time', icon: MonitorPlay },
-                                                    { type: ContentType.AUDIO_PODCAST, label: 'Sonic Osc', icon: Mic },
-                                                    { type: ContentType.VR_AR, label: 'X-Reality', icon: Box },
-                                                    { type: ContentType.SCORM_HTML5, label: 'Inter-Op', icon: Globe },
-                                                    { type: ContentType.QUIZ, label: 'Eval-Sync', icon: CheckSquare },
-                                                    { type: ContentType.EMBED, label: 'Injection', icon: Code },
+                                                    { type: ContentType.TEXT, label: 'Text', icon: FileText },
+                                                    { type: ContentType.VIDEO_VOD, label: 'Video', icon: Video },
+                                                    { type: ContentType.VIDEO_LIVE, label: 'Live Stream', icon: MonitorPlay },
+                                                    { type: ContentType.AUDIO_PODCAST, label: 'Audio', icon: Mic },
+                                                    { type: ContentType.VR_AR, label: 'XR Content', icon: Box },
+                                                    { type: ContentType.SCORM_HTML5, label: 'SCORM/HTML5', icon: Globe },
+                                                    { type: ContentType.QUIZ, label: 'Assessment', icon: CheckSquare },
+                                                    { type: ContentType.EMBED, label: 'Embed', icon: Code },
                                                 ].map((item) => {
                                                     const Icon = item.icon;
                                                     const isSelected = activeLesson.type === item.type;
@@ -835,8 +922,8 @@ const CourseBuilder: React.FC = () => {
                                                 <ShieldCheck size={20} />
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-hama-gold">Transmission Protocol Locked</p>
-                                                <p className="text-[9px] font-bold text-hama-gold/40 uppercase tracking-widest mt-0.5">Medium synchronized to Master Frequency: {activeLesson.type}</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-hama-gold">Content Type Locked</p>
+                                                <p className="text-[9px] font-bold text-hama-gold/40 uppercase tracking-widest mt-0.5">Media type synchronized to Default Language: {activeLesson.type}</p>
                                             </div>
                                         </div>
                                     )}
@@ -844,15 +931,15 @@ const CourseBuilder: React.FC = () => {
                             </div>
 
                             {/* Dynamic Content Editor */}
-                            <div className="mb-12 glass border-hama-gold/10 rounded-3xl overflow-hidden shadow-glass min-h-[500px] relative z-20">
+                            <div className="mb-12 glass border-hama-gold/10 rounded-3xl overflow-hidden shadow-glass min-h-[500px] relative z-10">
                                 <div className="px-10 py-6 border-b border-white/5 bg-white/2 flex items-center justify-between">
                                     <div className="flex items-center gap-3 relative z-10">
                                         <div className="w-2 h-2 bg-hama-gold rounded-full shadow-[0_0_10px_rgba(242,201,76,0.8)] animate-pulse" />
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary">Core Transmission Array</span>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary">Lesson Content Editor</span>
                                     </div>
                                     {isUploading && (
                                         <div className="flex items-center gap-2 text-[8px] font-black text-hama-gold uppercase tracking-widest animate-pulse">
-                                            Transmitting Byte Stream...
+                                            Uploading media asset...
                                         </div>
                                     )}
                                 </div>
@@ -870,8 +957,8 @@ const CourseBuilder: React.FC = () => {
                                                 <Settings size={24} />
                                             </div>
                                             <div>
-                                                <h4 className="text-[12px] font-black uppercase tracking-[0.3em] text-text-primary">Transmission Flux</h4>
-                                                <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-1">Automated Segment Delivery Parameters</p>
+                                                <h4 className="text-[12px] font-black uppercase tracking-[0.3em] text-text-primary">Delivery Settings</h4>
+                                                <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-1">Configure automated lesson delivery</p>
                                             </div>
                                         </div>
 
@@ -997,8 +1084,8 @@ const CourseBuilder: React.FC = () => {
                                 <PenTool size={40} className="text-text-muted/20 group-hover:text-hama-gold transition-all duration-700" />
                             </div>
                             <div className="text-center space-y-3">
-                                <p className="text-[12px] font-black uppercase tracking-[0.5em] text-text-muted group-hover:text-text-secondary transition-all duration-700">Initialize Draft Fragment</p>
-                                <p className="text-[9px] font-bold text-text-muted/40 uppercase tracking-widest">Select a Lesson from the Curriculum Map or Switch to Settings</p>
+                                <p className="text-[12px] font-black uppercase tracking-[0.5em] text-text-muted group-hover:text-text-secondary transition-all duration-700">Select a Lesson to Edit</p>
+                                <p className="text-[9px] font-bold text-text-muted/40 uppercase tracking-widest">Select a Lesson from the Course Structure or Switch to Settings</p>
                             </div>
                         </div>
                     )}
@@ -1012,6 +1099,120 @@ const CourseBuilder: React.FC = () => {
                     onRestore={handleRestore}
                     onClose={() => setShowVersionPanel(false)}
                 />
+            )}
+
+            {/* Lesson Editor Slide-over Panel */}
+            {showLessonEditor && activeLesson && (
+                <div className="fixed inset-0 z-[100] flex justify-end bg-black/60 backdrop-blur-md animate-in fade-in duration-500">
+                    <div className="w-full max-w-2xl bg-bg-primary shadow-2xl h-full flex flex-col animate-in slide-in-from-right duration-500 border-l border-hama-gold/10 relative overflow-hidden">
+                        <div className="noise opacity-10" />
+
+                        {/* Header */}
+                        <div className="bg-bg-primary border-b border-hama-gold/10 px-6 py-4 flex justify-between items-center z-20 sticky top-0 backdrop-blur-xl">
+                            <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 bg-hama-gold/10 border border-hama-gold/20 rounded-xl flex items-center justify-center text-hama-gold">
+                                    <PenTool size={20} />
+                                </div>
+                                <div>
+                                    <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-text-primary">Lesson Editor</h2>
+                                    <p className="text-[10px] font-bold text-hama-gold/60 uppercase tracking-widest mt-0.5">{activeLesson.title}</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowLessonEditor(false)}
+                                className="p-2 text-text-muted hover:text-text-primary transition-colors bg-white/5 rounded-lg border border-white/5"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        {/* Editor Content */}
+                        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 space-y-6">
+                            {/* Lesson Title */}
+                            <div>
+                                <label className="block text-[10px] font-black text-text-secondary uppercase tracking-[0.2em] mb-3 ml-1">Lesson Title</label>
+                                <input
+                                    dir={isRTL ? 'rtl' : 'ltr'}
+                                    className={`w-full p-4 glass border border-white/10 rounded-2xl text-[14px] font-black uppercase tracking-[0.1em] text-text-primary focus:ring-1 focus:ring-hama-gold/30 outline-none ${transparentInputClass}`}
+                                    placeholder="Enter lesson title..."
+                                    value={getLocalized(activeLesson, 'title') || ''}
+                                    onChange={(e) => updateLessonField('title', e.target.value)}
+                                />
+                            </div>
+
+                            {/* Content Type */}
+                            {isDefaultLocale && (
+                                <div>
+                                    <label className="block text-[10px] font-black text-text-secondary uppercase tracking-[0.2em] mb-3 ml-1">Content Type</label>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                        {[
+                                            { type: ContentType.TEXT, label: 'Text', icon: FileText },
+                                            { type: ContentType.VIDEO_VOD, label: 'Video', icon: Video },
+                                            { type: ContentType.AUDIO_PODCAST, label: 'Audio', icon: Mic },
+                                            { type: ContentType.QUIZ, label: 'Quiz', icon: CheckSquare },
+                                        ].map((item) => {
+                                            const Icon = item.icon;
+                                            const isSelected = activeLesson.type === item.type;
+                                            return (
+                                                <button
+                                                    key={item.type}
+                                                    onClick={() => updateLesson({ type: item.type as ContentType })}
+                                                    className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-all ${isSelected
+                                                        ? 'bg-hama-gold text-black border-hama-gold'
+                                                        : 'bg-white/5 border-white/10 text-text-muted hover:border-hama-gold/30'
+                                                        }`}
+                                                >
+                                                    <Icon size={16} />
+                                                    <span className="text-[8px] font-black uppercase">{item.label}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Content Editor */}
+                            <div>
+                                <label className="block text-[10px] font-black text-text-secondary uppercase tracking-[0.2em] mb-3 ml-1">Content ({currentLocale})</label>
+                                <textarea
+                                    dir={isRTL ? 'rtl' : 'ltr'}
+                                    className={`w-full h-64 p-4 glass border border-white/10 rounded-2xl text-sm text-text-primary focus:ring-1 focus:ring-hama-gold/30 outline-none ${transparentInputClass} resize-none`}
+                                    placeholder="Write your lesson content here..."
+                                    value={getLocalized(activeLesson, 'content') || ''}
+                                    onChange={(e) => updateLessonField('content', e.target.value)}
+                                />
+                            </div>
+
+                            {/* Duration */}
+                            <div>
+                                <label className="block text-[10px] font-black text-text-secondary uppercase tracking-[0.2em] mb-3 ml-1">Duration (minutes)</label>
+                                <input
+                                    type="number"
+                                    className={`w-full p-4 glass border border-white/10 rounded-2xl text-sm text-text-primary focus:ring-1 focus:ring-hama-gold/30 outline-none ${transparentInputClass}`}
+                                    placeholder="10"
+                                    value={activeLesson.durationMinutes || 10}
+                                    onChange={(e) => updateLessonField('durationMinutes', String(parseInt(e.target.value) || 10))}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-4 border-t border-hama-gold/10 bg-bg-primary/95 backdrop-blur-xl sticky bottom-0 flex justify-between">
+                            <button
+                                onClick={() => { setShowLessonEditor(false); setActiveLessonId(null); }}
+                                className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-text-primary"
+                            >
+                                Close
+                            </button>
+                            <button
+                                onClick={() => { setShowLessonEditor(false); handleSaveDraft(); }}
+                                className="px-6 py-2 bg-hama-gold text-black font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-hama-gold/80"
+                            >
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

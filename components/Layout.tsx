@@ -16,9 +16,8 @@ import {
   Users
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { UserRole, Notification } from '../types';
-import { getNotifications, markAsRead, markAllAsRead, subscribeToNotifications } from '../services/notificationService';
-import NotificationDropdown from './NotificationDropdown';
+import { UserRole } from '../types';
+import NotificationCenter from './NotificationCenter';
 import { useToast } from './Toast';
 
 interface LayoutProps {
@@ -38,42 +37,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout, hasRole } = useAuth();
   const { addToast } = useToast();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isNotifOpen, setIsNotifOpen] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-
-    // Initial load
-    const loadNotifs = async () => {
-      const data = await getNotifications(user.id);
-      setNotifications(data);
-    };
-    loadNotifs();
-
-    // Subscribe to new signals
-    const subscription = subscribeToNotifications(user.id, (newNotif) => {
-      setNotifications(prev => [newNotif, ...prev]);
-      addToast(`Intelligence Received: ${newNotif.title}`, 'info');
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [user, addToast]);
-
-  const handleMarkRead = async (id: string) => {
-    await markAsRead(id);
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
-  };
-
-  const handleMarkAllRead = async () => {
-    if (!user) return;
-    await markAllAsRead(user.id);
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-  };
-
-  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -81,11 +44,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, [user, navigate]);
 
   const navItems: NavItem[] = [
-    { name: 'Studio Home', path: '/', icon: LayoutDashboard, allowedRoles: ['Admin', 'Teacher', 'Student'] },
+    { name: 'Dashboard', path: '/', icon: LayoutDashboard, allowedRoles: ['Admin', 'Teacher', 'Student'] },
     { name: 'Catalog', path: '/courses', icon: BookOpen, allowedRoles: ['Admin', 'Teacher', 'Student'] },
     { name: 'Course Studio', path: '/create', icon: PenTool, allowedRoles: ['Admin', 'Teacher'] },
-    { name: 'Artists & Staff', path: '/users', icon: Users, allowedRoles: ['Admin'] },
-    { name: 'Insights', path: '/analytics', icon: BarChart3, allowedRoles: ['Admin', 'Teacher'] },
+    { name: 'Users', path: '/users', icon: Users, allowedRoles: ['Admin'] },
+    { name: 'Reports', path: '/analytics', icon: BarChart3, allowedRoles: ['Admin', 'Teacher'] },
     { name: 'Settings', path: '/settings', icon: Settings, allowedRoles: ['Admin'] },
   ];
 
@@ -118,7 +81,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <img src="/hama_logo.png" alt="HAMA Academy" className="w-14 h-14 object-contain shadow-2xl rounded-xl" />
               <div>
                 <h1 className="text-[14px] font-black text-text-primary uppercase tracking-[0.2em] font-sans">HAMA Academy</h1>
-                <p className="text-[9px] text-hama-gold/60 font-bold uppercase tracking-[0.2em] mt-0.5">Induction Portal</p>
+                <p className="text-[9px] text-hama-gold/60 font-bold uppercase tracking-[0.2em] mt-0.5">Student Portal</p>
               </div>
             </div>
           </div>
@@ -166,7 +129,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               className="flex items-center gap-4 px-4 py-3 w-full text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted hover:text-text-primary transition-colors"
             >
               <LogOut size={18} className="text-white/20" />
-              Studio Sign Out
+              Sign Out
             </button>
           </div>
         </aside>
@@ -175,7 +138,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
         {/* Header */}
-        <header className="flex items-center justify-between px-8 h-24 glass border-b border-hama-gold/10">
+        <header className="flex items-center justify-between px-4 md:px-8 h-20 md:h-24 glass border-b border-hama-gold/10">
           <div className="flex items-center gap-4">
             <button
               className="md:hidden p-2 text-text-secondary"
@@ -187,7 +150,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={16} />
               <input
                 type="text"
-                placeholder="Search Studio Archives..."
+                placeholder="Search Courses..."
                 className={searchInputClass}
               />
             </div>
@@ -200,29 +163,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </div>
             )}
 
-            <div className="relative">
-              <button
-                onClick={() => setIsNotifOpen(!isNotifOpen)}
-                className={`relative p-2.5 rounded-xl border transition-all ${isNotifOpen
-                  ? 'bg-hama-gold/10 border-hama-gold/30 text-hama-gold'
-                  : 'bg-white/5 border-white/10 text-text-secondary hover:text-hama-gold'
-                  }`}
-              >
-                <Bell size={20} />
-                {unreadCount > 0 && (
-                  <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-hama-gold rounded-full ring-4 ring-bg-primary animate-pulse shadow-[0_0_10px_rgba(242,201,76,0.5)]"></span>
-                )}
-              </button>
-
-              {isNotifOpen && (
-                <NotificationDropdown
-                  notifications={notifications}
-                  onMarkRead={handleMarkRead}
-                  onMarkAllRead={handleMarkAllRead}
-                  onClose={() => setIsNotifOpen(false)}
-                />
-              )}
-            </div>
+            <NotificationCenter />
           </div>
         </header>
 

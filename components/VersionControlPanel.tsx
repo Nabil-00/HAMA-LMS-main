@@ -26,7 +26,7 @@ const VersionControlPanel: React.FC<VersionControlPanelProps> = ({ course, onPub
   const nextVersion = calculateNextVersion(course.currentVersion, releaseType);
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-md animate-in fade-in duration-500">
+    <div className="fixed inset-0 z-[100] flex justify-end bg-black/60 backdrop-blur-md animate-in fade-in duration-500">
       <div className="w-full max-w-md bg-bg-primary shadow-2xl h-full flex flex-col animate-in slide-in-from-right duration-500 border-l border-hama-gold/10 relative overflow-hidden">
         <div className="noise opacity-10" />
         <div className="relative z-10 flex flex-col h-full">
@@ -75,7 +75,7 @@ const VersionControlPanel: React.FC<VersionControlPanelProps> = ({ course, onPub
                   <h3 className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-1">Submission Type</h3>
                   <div className="grid grid-cols-1 gap-3">
                     {[
-                      { type: VersionType.MINOR, label: 'Minor Update', desc: 'Refinements to existing curriculum content.', color: 'hama-gold' },
+                      { type: VersionType.MINOR, label: 'Minor Update', desc: 'Refinements to existing course content.', color: 'hama-gold' },
                       { type: VersionType.MAJOR, label: 'Major Release', desc: 'Structural changes or new module introductions.', color: 'red-500' },
                       { type: VersionType.PATCH, label: 'Standard Fix', desc: 'Correction of minor errors or typos.', color: 'text-muted' }
                     ].map((item) => (
@@ -125,7 +125,7 @@ const VersionControlPanel: React.FC<VersionControlPanelProps> = ({ course, onPub
                 {course.versions.length === 0 ? (
                   <div className="text-center py-20 opacity-20">
                     <History size={48} className="mx-auto mb-6" />
-                    <p className="text-[10px] font-black uppercase tracking-widest italic">No archive history detected.</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest italic">No version history detected.</p>
                   </div>
                 ) : (
                   course.versions.map((ver, idx) => (
@@ -191,7 +191,7 @@ const VersionControlPanel: React.FC<VersionControlPanelProps> = ({ course, onPub
                 {course.auditLog.length === 0 && (
                   <div className="text-center py-20 opacity-20">
                     <FileClock size={48} className="mx-auto mb-6" />
-                    <p className="text-[10px] font-black uppercase tracking-widest italic">Audit ledger is empty.</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest italic">Audit log is empty.</p>
                   </div>
                 )}
               </div>

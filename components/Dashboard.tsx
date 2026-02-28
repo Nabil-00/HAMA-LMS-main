@@ -32,7 +32,7 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon: Icon }) => (
-  <div className="bento-card p-6 md:p-8 flex items-start gap-4 group cursor-default min-w-0">
+  <div className="bento-card p-4 md:p-8 flex items-start gap-4 group cursor-default min-w-0">
     <div className="flex-1 min-w-0">
       <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] mb-2 truncate">{title}</p>
       <div className="flex items-end gap-2 flex-wrap">
@@ -99,28 +99,23 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-12">
       <div className="mb-12">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-hama-gold/5 border border-hama-gold/10 text-hama-gold text-[10px] font-bold uppercase tracking-[0.3em] mb-4">
-          Studio Access Verified
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-hama-gold/5 border border-hama-gold/10 text-hama-gold text-[10px] font-bold uppercase tracking-[0.3em] mb-4">
+          Welcome Back
         </div>
         <h1 className="text-4xl md:text-5xl font-bold serif mb-4 text-text-primary">
-          {user?.role === 'Admin' ? 'Management Suite' : user?.role === 'Teacher' ? 'Instructor Studio' : 'Academy Dashboard'}
+          {user?.role === 'Admin' ? 'Admin Area' : user?.role === 'Teacher' ? 'Teacher Dashboard' : 'My Dashboard'}
         </h1>
-        <p className="text-text-secondary max-w-2xl leading-relaxed">
-          Welcome back, {user?.name || 'Artist'}.
-          {user?.role === 'Admin' && ' Full oversight of HAMA Academy operations and enrollment.'}
-          {user?.role === 'Teacher' && ' Manage your courses and track student performance metrics.'}
-          {user?.role === 'Student' && ' Continue your journey towards professional Hausa music mastery.'}
-        </p>
+        <p className="text-text-secondary mt-4 max-w-lg leading-relaxed font-light">Track your progress and courses.</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {user?.role === 'Student' ? (
           <>
             <StatCard title="My Courses" value={recentActivity.length} change="Live" icon={BookOpen} />
             <StatCard title="Academy Status" value="Online" change="Verified" icon={CheckSquare} />
             <StatCard title="Certificates" value={recentActivity.filter(a => a.status === 'Completed').length} change="Verified" icon={GraduationCap} />
-            <StatCard title="Induction Time" value="Active" change="Live" icon={Clock} />
+            <StatCard title="Enrollment Status" value="Active" change="Live" icon={Clock} />
           </>
         ) : (
           <>
@@ -136,7 +131,7 @@ const Dashboard: React.FC = () => {
       {user?.role !== 'Student' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 bento-card p-8">
-            <h3 className="text-xl font-bold serif mb-8 text-hama-gold">Enrollment Velocity</h3>
+            <h3 className="text-xl font-bold serif mb-8 text-hama-gold">Enrollments</h3>
             <div className="h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={data}>
@@ -160,7 +155,7 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="bento-card p-8">
-            <h3 className="text-xl font-bold serif mb-8 text-hama-gold">Geographic Distribution</h3>
+            <h3 className="text-xl font-bold serif mb-8 text-hama-gold">Content Types</h3>
             <div className="h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={engagementData} layout="vertical">
@@ -179,9 +174,9 @@ const Dashboard: React.FC = () => {
       <div className="bento-card overflow-hidden">
         <div className="px-8 py-6 border-b border-white/5 flex justify-between items-center relative z-10">
           <h3 className="text-xl font-bold serif text-text-primary">
-            {user?.role === 'Student' ? 'My Recent Progress' : 'Recent Studio Activity'}
+            {user?.role === 'Student' ? 'My Recent Progress' : 'Recent Activity'}
           </h3>
-          <button className="text-[10px] font-black uppercase tracking-[0.2em] text-hama-gold/60 hover:text-hama-gold transition-colors">View All Logs</button>
+          <button className="text-[10px] font-black uppercase tracking-[0.2em] text-hama-gold/60 hover:text-hama-gold transition-colors">View All</button>
         </div>
         <div className="overflow-x-auto text-sm">
           <table className="w-full text-left">

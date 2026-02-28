@@ -36,9 +36,9 @@ const goldBadgeClass = "px-3 py-1 rounded-full bg-hama-gold/5 border border-hama
 // --- VIDEO EDITOR (VOD & LIVE) ---
 export const VideoEditor: React.FC<EditorProps & { isLive?: boolean }> = ({ metadata, onChange, onUpload, isUploading, isLive }) => {
    return (
-      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-         <div className={`${bentoCardClass} p-12 text-center border-dashed border-2 flex flex-col items-center justify-center min-h-[300px] group relative overflow-hidden`}>
-            <div className="w-20 h-20 bg-hama-gold/10 rounded-3xl flex items-center justify-center mb-6 border border-hama-gold/20 group-hover:scale-110 transition-transform relative z-10">
+      <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+         <div className={`${bentoCardClass} p-6 md:p-12 text-center border-dashed border-2 flex flex-col items-center justify-center min-h-[250px] md:min-h-[300px] group relative overflow-hidden`}>
+            <div className="w-16 h-16 md:w-20 md:h-20 bg-hama-gold/10 rounded-2xl md:rounded-3xl flex items-center justify-center mb-4 md:mb-6 border border-hama-gold/20 group-hover:scale-110 transition-transform relative z-10">
                <MonitorPlay size={32} className="text-hama-gold" />
             </div>
             <h3 className="text-text-primary font-bold text-xl serif relative z-10">

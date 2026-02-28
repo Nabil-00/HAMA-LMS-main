@@ -25,10 +25,10 @@ const Login = () => {
 
       try {
          await login(email, password);
-         addToast('Protocol Synchronized: Access Granted', 'success');
+         addToast('Successfully signed in', 'success');
          navigate('/');
       } catch (e: any) {
-         setError('Authentication failed. Check your studio credentials.');
+         setError('Login failed. Check your email or password.');
          setIsLoading(false);
       }
    };
@@ -48,10 +48,10 @@ const Login = () => {
             <div className="relative z-10 max-w-xl">
 
                <h1 className="text-6xl font-bold text-text-primary mb-8 tracking-tight leading-tight serif">
-                  Master the <span className="text-hama-gold">Modern Art</span> of Hausa Music.
+                  Learn <span className="text-hama-gold">Hausa Music</span> Production.
                </h1>
                <p className="text-text-secondary text-xl leading-relaxed mb-12 font-light">
-                  Professional-grade training in songwriting, production, and mastery from Nigeria's top artists.
+                  Learn music production from top artists.
                </p>
 
                <div className="grid grid-cols-2 gap-8">
@@ -59,7 +59,7 @@ const Login = () => {
                      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
                         <ShieldCheck className="text-hama-gold" size={20} />
                      </div>
-                     <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50">Verified Academy</span>
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50">Verified</span>
                   </div>
                   <div className="flex items-center gap-4 text-text-muted">
                      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
@@ -77,13 +77,13 @@ const Login = () => {
                <div className="text-center space-y-8">
                   <div className="relative inline-block">
                      <div className="absolute inset-0 bg-hama-gold/20 blur-3xl rounded-full" />
-                     <img src="/hama_logo.png" alt="HAMA Academy" className="w-40 h-40 object-contain mx-auto relative z-10 drop-shadow-[0_0_30px_rgba(242,201,76,0.3)] animate-pulse duration-[4000ms]" />
+                     <img src="/hama_logo.png" alt="HAMA Academy" className="w-24 h-24 md:w-40 md:h-40 object-contain mx-auto relative z-10 drop-shadow-[0_0_30px_rgba(242,201,76,0.3)] animate-pulse duration-[4000ms]" />
                   </div>
                   <div className="space-y-3">
                      <h1 className="text-3xl font-black text-text-primary uppercase tracking-[0.3em] font-sans">Access Portal</h1>
-                     <p className="text-[10px] text-text-muted font-bold uppercase tracking-[0.4em] max-w-[280px] mx-auto leading-relaxed">
-                        Connect your consciousness to the HAMA curriculum.
-                     </p>
+                   <p className="text-[10px] text-text-muted font-bold uppercase tracking-[0.4em] max-w-[280px] mx-auto leading-relaxed">
+                      Sign in to continue.
+                   </p>
                   </div>
                </div>
 
@@ -109,7 +109,7 @@ const Login = () => {
 
                      <div className="space-y-2">
                         <div className="flex justify-between items-center ml-1">
-                           <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em]">Studio Password</label>
+                           <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em]">Password</label>
                         </div>
                         <div className="relative group">
                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-hama-gold transition-colors" size={18} />
@@ -142,7 +142,7 @@ const Login = () => {
                   <button
                      type="submit"
                      disabled={isLoading}
-                     className="w-full py-5 bg-hama-gold text-white font-black text-xs uppercase tracking-[0.4em] rounded-2xl shadow-xl shadow-hama-gold/10 hover:shadow-hama-gold/40 hover:bg-[#FADC7A] hover:text-black hover:scale-[1.01] transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
+                     className="w-full py-5 bg-hama-gold text-white font-black text-xs uppercase tracking-[0.4em] rounded-2xl shadow-xl shadow-hama-gold/10 hover:shadow-hama-gold/40 hover:bg-[#FADC7A] hover:text-black hover:scale-[1.01] transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden pulse-glow"
                   >
                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite] pointer-events-none" />
                      {isLoading ? (

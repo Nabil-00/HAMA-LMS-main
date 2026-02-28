@@ -31,7 +31,7 @@ const defaultQuestions: Question[] = [
 ];
 
 const QuizModal: React.FC<QuizModalProps> = ({
-    title = "Module Assessment: Sonic Foundations",
+    title = "Module Assessment: Audio Foundations",
     questions = defaultQuestions,
     onComplete,
     onClose
@@ -91,7 +91,7 @@ const QuizModal: React.FC<QuizModalProps> = ({
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold text-text-primary serif tracking-tight">{title}</h3>
-                                <p className="text-[9px] text-text-muted uppercase tracking-[0.2em] font-black mt-1 font-sans">Knowledge Verification Protocol</p>
+                                <p className="text-[9px] text-text-muted uppercase tracking-[0.2em] font-black mt-1 font-sans">Module Assessment</p>
                             </div>
                         </div>
                         {onClose && (
@@ -109,16 +109,16 @@ const QuizModal: React.FC<QuizModalProps> = ({
                                     <ArrowRight size={32} className="text-hama-gold" />
                                 </div>
                                 <div className="space-y-3">
-                                    <p className="text-[10px] font-black text-hama-gold uppercase tracking-[0.4em]">Ready for Induction?</p>
+                                    <p className="text-[10px] font-black text-hama-gold uppercase tracking-[0.4em]">Ready for Assessment?</p>
                                     <p className="text-text-muted font-light leading-relaxed max-w-sm mx-auto font-sans">
-                                        This assessment contains {questions.length} critical inquiries regarding the recent curriculum module.
+                                        This assessment contains {questions.length} questions regarding the recent course module.
                                     </p>
                                 </div>
                                 <button
                                     onClick={handleStart}
                                     className="px-12 py-4 bg-hama-gold text-black rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-hama-gold/10 hover:bg-text-primary transition-all font-sans"
                                 >
-                                    Initialize Quiz
+                                    Start Assessment
                                 </button>
                             </div>
                         )}
@@ -126,7 +126,7 @@ const QuizModal: React.FC<QuizModalProps> = ({
                         {currentStep === 1 && currentQuestion && (
                             <div className="space-y-10 animate-in fade-in">
                                 <div className="flex justify-between items-end mb-4 font-sans">
-                                    <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em]">Query {currentQuestionIndex + 1} of {questions.length}</span>
+                                    <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em]">Question {currentQuestionIndex + 1} of {questions.length}</span>
                                     <div className="h-1.5 w-32 bg-white/5 rounded-full overflow-hidden">
                                         <div
                                             className="h-full bg-hama-gold transition-all duration-500"
@@ -166,7 +166,7 @@ const QuizModal: React.FC<QuizModalProps> = ({
                                         onClick={handleNext}
                                         className="px-10 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-text-muted hover:text-text-primary hover:border-hama-gold/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed group font-sans"
                                     >
-                                        {currentQuestionIndex === questions.length - 1 ? 'Analyze Results' : 'Next Selection'}
+                                        {currentQuestionIndex === questions.length - 1 ? 'See Results' : 'Next Question'}
                                         <ArrowRight size={14} className="inline ml-3 group-hover:translate-x-1 transition-transform" />
                                     </button>
                                 </div>
@@ -193,18 +193,18 @@ const QuizModal: React.FC<QuizModalProps> = ({
                                     </svg>
                                     <div className="absolute inset-0 flex flex-col items-center justify-center font-sans">
                                         <span className="text-5xl font-black text-text-primary">{score}%</span>
-                                        <span className="text-[10px] font-black text-text-muted uppercase tracking-widest mt-1">Efficiency</span>
+                                        <span className="text-[10px] font-black text-text-muted uppercase tracking-widest mt-1">Final Score</span>
                                     </div>
                                 </div>
 
                                 <div className="space-y-4">
                                     <h4 className="text-3xl font-bold text-text-primary serif italic">
-                                        {score >= 80 ? 'Exceptional Mastery' : score >= 50 ? 'Successful Induction' : 'Refinement Required'}
+                                        {score >= 80 ? 'Exceptional Mastery' : score >= 50 ? 'Passed' : 'Review Required'}
                                     </h4>
                                     <p className="text-text-secondary text-sm font-light leading-relaxed max-w-sm mx-auto font-sans">
                                         {score >= 80
-                                            ? "Your sonic perception aligns perfectly with HAMA standards. Proceed to the next studio tier."
-                                            : "The induction was successful, though some frequencies remain unrefined. Continue your journey."}
+                                            ? "You did a great job. You can start the next lesson."
+                                            : "You passed the assessment. Keep going!"}
                                     </p>
                                 </div>
 
@@ -213,13 +213,13 @@ const QuizModal: React.FC<QuizModalProps> = ({
                                         onClick={handleReset}
                                         className="flex items-center gap-3 px-8 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-text-muted hover:text-text-primary transition-all font-sans"
                                     >
-                                        <RotateCcw size={16} /> Recalibrate
+                                        <RotateCcw size={16} /> Retake Assessment
                                     </button>
                                     <button
                                         onClick={onClose}
                                         className="flex items-center gap-3 px-10 py-4 bg-hama-gold text-black rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-hama-gold/20 hover:bg-text-primary transition-all font-sans"
                                     >
-                                        <CheckCircle2 size={16} /> Complete Session
+                                        <CheckCircle2 size={16} /> Finish Assessment
                                     </button>
                                 </div>
                             </div>

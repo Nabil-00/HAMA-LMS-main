@@ -48,7 +48,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           <div
             key={toast.id}
             className={`
-              pointer-events-auto flex items-start gap-4 px-6 py-4 rounded-2xl glass-elevated border-hama-gold/20 shadow-2xl w-80 transform transition-all duration-500 animate-in slide-in-from-right-8 fade-in relative overflow-hidden
+              pointer-events-auto flex items-start gap-4 px-5 py-4 rounded-2xl glass-elevated backdrop-blur-xl border-hama-gold/20 shadow-2xl w-64 md:w-72 transform transition-all duration-500 animate-in slide-in-from-right-8 fade-in relative overflow-hidden
               ${toast.type === 'success' ? 'bg-bg-secondary/90' : ''}
               ${toast.type === 'error' ? 'bg-bg-secondary/90' : ''}
               ${toast.type === 'info' ? 'bg-bg-secondary/90' : ''}
@@ -62,10 +62,10 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             </div>
             <div className="relative z-10 flex-1">
               <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] font-sans ${toast.type === 'success' ? 'text-hama-success' :
-                  toast.type === 'error' ? 'text-red-500' :
-                    'text-hama-gold'
+                toast.type === 'error' ? 'text-red-500' :
+                  'text-hama-gold'
                 }`}>
-                {toast.type === 'success' ? 'Protocol Success' : toast.type === 'error' ? 'System Error' : 'Intelligence'}
+                {toast.type === 'success' ? 'Success' : toast.type === 'error' ? 'Error' : 'Info'}
               </h4>
               <p className="text-[11px] text-text-secondary mt-1 font-bold tracking-tight leading-relaxed">{toast.message}</p>
             </div>

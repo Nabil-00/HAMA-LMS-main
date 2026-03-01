@@ -84,14 +84,14 @@ const QuizModal: React.FC<QuizModalProps> = ({
                 <div className="relative z-10 flex flex-col h-full">
 
                     {/* Header */}
-                    <div className="px-10 py-8 border-b border-white/5 flex justify-between items-center bg-bg-primary/40 backdrop-blur-md">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-hama-gold/10 border border-hama-gold/20 rounded-xl flex items-center justify-center text-hama-gold">
-                                <HelpCircle size={20} />
+                    <div className="px-6 md:px-10 py-6 md:py-8 border-b border-white/5 flex justify-between items-center bg-bg-primary/40 backdrop-blur-md">
+                        <div className="flex items-center gap-3 md:gap-4 font-sans">
+                            <div className="w-9 h-9 md:w-10 md:h-10 bg-hama-gold/10 border border-hama-gold/20 rounded-xl flex items-center justify-center text-hama-gold">
+                                <HelpCircle className="w-[18px] h-[18px] md:w-[20px] md:h-[20px]" />
                             </div>
                             <div>
-                                <h3 className="text-xl font-bold text-text-primary serif tracking-tight">{title}</h3>
-                                <p className="text-[9px] text-text-muted uppercase tracking-[0.2em] font-black mt-1 font-sans">Module Assessment</p>
+                                <h3 className="text-lg md:text-xl font-bold text-text-primary serif tracking-tight">{title}</h3>
+                                <p className="text-[8px] md:text-[9px] text-text-muted uppercase tracking-[0.2em] font-black mt-1">Module Assessment</p>
                             </div>
                         </div>
                         {onClose && (
@@ -102,7 +102,7 @@ const QuizModal: React.FC<QuizModalProps> = ({
                     </div>
 
                     {/* Content Area */}
-                    <div className="p-10 min-h-[400px] flex flex-col justify-center">
+                    <div className="p-6 md:p-10 min-h-[400px] flex flex-col justify-center">
                         {currentStep === 0 && (
                             <div className="text-center space-y-8 animate-in fade-in slide-in-from-bottom-4">
                                 <div className="w-20 h-20 bg-hama-gold/5 border border-hama-gold/10 rounded-full flex items-center justify-center mx-auto">

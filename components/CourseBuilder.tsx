@@ -39,6 +39,7 @@ import TranslationManager from './TranslationManager';
 import VersionControlPanel from './VersionControlPanel';
 import { VideoEditor, AudioEditor, ImmersiveEditor, ScormEditor, EmbedEditor } from './ContentEditors';
 import { useToast } from './Toast';
+import OrientationPrompt from './OrientationPrompt';
 
 const RTL_LOCALES = ['ar-SA', 'he-IL', 'fa-IR', 'ur-PK'];
 
@@ -66,6 +67,12 @@ const CourseBuilder: React.FC = () => {
         auditLog: []
     });
 
+    const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1024);
+    const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
+    const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
+    const [showVersionPanel, setShowVersionPanel] = useState(false);
+    const [showLessonEditor, setShowLessonEditor] = useState(false);
+
     useEffect(() => {
         const loadInitialCourse = async () => {
             const courseId = searchParams.get('courseId');
@@ -82,10 +89,15 @@ const CourseBuilder: React.FC = () => {
         loadInitialCourse();
     }, [searchParams]);
 
-    const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
-    const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
-    const [showVersionPanel, setShowVersionPanel] = useState(false);
-    const [showLessonEditor, setShowLessonEditor] = useState(false);
+    // Auto-close sidebar on mobile when window resizes
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth <= 1024) setSidebarOpen(false);
+            else setSidebarOpen(true);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Auto-create module and lesson for new courses
     useEffect(() => {
@@ -509,6 +521,7 @@ const CourseBuilder: React.FC = () => {
 
     return (
         <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-8rem)] glass rounded-2xl md:rounded-3xl overflow-hidden border border-hama-gold/10 shadow-glass animate-in fade-in duration-700">
+            <OrientationPrompt />
 
             {/* Localization Integration */}
             <TranslationManager
@@ -528,6 +541,13 @@ const CourseBuilder: React.FC = () => {
                         className="p-2 text-white/20 hover:text-gold transition-all bg-white/5 rounded-xl border border-white/5 hover:border-gold/20"
                     >
                         <ArrowLeft size={20} />
+                    </button>
+                    <button
+                        onClick={() => setSidebarOpen(!sidebarOpen)}
+                        className="lg:hidden p-2 text-hama-gold bg-hama-gold/10 rounded-xl border border-hama-gold/20 hover:bg-hama-gold/20 transition-all"
+                        title="Toggle Structure"
+                    >
+                        <ListChecks size={20} />
                     </button>
                     <div className="flex flex-col">
                         {/* Strict Input: Course Title */}
@@ -597,19 +617,35 @@ const CourseBuilder: React.FC = () => {
                 </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
-                {/* Sidebar: Structure - Fixed width, scrollable */}
-                <div className="w-full lg:w-96 min-h-[35vh] lg:min-h-0 lg:h-full flex-shrink-0 border-b lg:border-b-0 lg:border-r border-hama-gold/10 bg-bg-primary/40 flex flex-col relative z-30 overflow-hidden">
+            <div className="flex flex-1 overflow-hidden relative">
+                {/* Mobile Sidebar Overlay */}
+                {sidebarOpen && (
+                    <div
+                        className="lg:hidden absolute inset-0 bg-black/60 backdrop-blur-sm z-40 animate-in fade-in duration-300"
+                        onClick={() => setSidebarOpen(false)}
+                    />
+                )}
+
+                {/* Sidebar: Structure - Fixed width on desktop, overlay on mobile */}
+                <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:hidden'} absolute lg:relative lg:translate-x-0 w-[85vw] sm:w-80 lg:w-96 h-full flex-shrink-0 border-r border-hama-gold/10 bg-bg-primary/95 lg:bg-bg-primary/40 backdrop-blur-xl lg:backdrop-blur-none flex flex-col z-[45] transition-transform duration-300 ease-in-out`}>
                     <div className="p-8 flex justify-between items-center border-b border-white/5 bg-white/2">
                         <h3 className="text-[11px] font-black text-text-muted uppercase tracking-[0.3em] flex items-center gap-3">
                             <ListChecks size={16} className="text-hama-gold/40" />
                             Course Structure
                         </h3>
-                        {isDefaultLocale && (
-                            <button onClick={addModule} className="p-2 hover:bg-hama-gold/10 rounded-xl text-text-muted hover:text-hama-gold transition-all border border-transparent hover:border-hama-gold/20">
-                                <Plus size={18} />
+                        <div className="flex items-center gap-2">
+                            {isDefaultLocale && (
+                                <button onClick={addModule} className="p-2 hover:bg-hama-gold/10 rounded-xl text-text-muted hover:text-hama-gold transition-all border border-transparent hover:border-hama-gold/20">
+                                    <Plus size={18} />
+                                </button>
+                            )}
+                            <button
+                                onClick={() => setSidebarOpen(false)}
+                                className="lg:hidden p-2 hover:bg-white/10 rounded-xl text-text-muted hover:text-white transition-all"
+                            >
+                                <X size={20} />
                             </button>
-                        )}
+                        </div>
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin">

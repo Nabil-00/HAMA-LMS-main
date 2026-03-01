@@ -185,12 +185,28 @@ body {
   animation: ticker 40s linear infinite;
 }
 
-/* Prevent auto-zoom on iOS */
+/* Prevent auto-zoom and boost readability on mobile */
 @media screen and (max-width: 768px) {
 
   input,
   select,
   textarea {
     font-size: 16px !important;
+  }
+
+  /* Global font size floor for mobile */
+  .text-\[8px\], .text-\[9px\], .text-\[10px\], .text-xs {
+    font-size: 0.75rem !important; /* 12px */
+    letter-spacing: 0.1em !important;
+  }
+
+  .text-\[11px\] {
+    font-size: 0.8125rem !important; /* 13px */
+  }
+
+  /* Ensure headings remain manageable */
+  .text-4xl, .text-5xl, .text-6xl, .text-7xl {
+    font-size: 1.875rem !important; /* 30px */
+    line-height: 1.25 !important;
   }
 }

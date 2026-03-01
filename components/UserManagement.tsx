@@ -31,14 +31,14 @@ const UserModal = ({ user, onClose, onSave }: { user: UserProfile | null, onClos
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl p-4 animate-in fade-in duration-300">
             <div className="w-full max-w-md glass border-hama-gold/10 bg-bg-secondary overflow-hidden animate-in zoom-in-95 duration-300 relative">
-                <div className="p-8 border-b border-white/5 flex items-center justify-between relative z-10">
-                    <div className="flex items-center gap-4">
-                        <div className="p-2.5 bg-hama-gold text-black rounded-xl">
-                            <User size={20} />
+                <div className="p-6 md:p-8 border-b border-white/5 flex items-center justify-between relative z-10">
+                    <div className="flex items-center gap-3 md:gap-4">
+                        <div className="p-2 md:p-2.5 bg-hama-gold text-black rounded-xl">
+                            <User className="w-[18px] h-[18px] md:w-[20px] md:h-[20px]" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold text-hama-gold serif italic">{user ? 'Edit User' : 'Add New User'}</h3>
-                            <p className="text-[9px] text-text-muted uppercase tracking-[0.2em] font-black mt-1">HAMA Users</p>
+                            <h3 className="text-lg md:text-xl font-bold text-hama-gold serif italic">{user ? 'Edit User' : 'Add New User'}</h3>
+                            <p className="text-[8px] md:text-[9px] text-text-muted uppercase tracking-[0.2em] font-black mt-1">HAMA Users</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="text-text-muted hover:text-text-primary transition-colors">
@@ -139,14 +139,14 @@ const EnrollmentModal = ({ user, onClose }: { user: UserProfile, onClose: () => 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl p-4 animate-in fade-in duration-300">
             <div className="w-full max-w-2xl glass border-hama-gold/10 bg-bg-secondary overflow-hidden animate-in zoom-in-95 duration-300 relative max-h-[90vh] flex flex-col">
-                <div className="p-8 border-b border-white/5 flex items-center justify-between relative z-10">
-                    <div className="flex items-center gap-4">
-                        <div className="p-2.5 bg-hama-gold text-black rounded-xl">
-                            <GraduationCap size={20} />
+                <div className="p-6 md:p-8 border-b border-white/5 flex items-center justify-between relative z-10">
+                    <div className="flex items-center gap-3 md:gap-4">
+                        <div className="p-2 md:p-2.5 bg-hama-gold text-black rounded-xl">
+                            <GraduationCap className="w-[18px] h-[18px] md:w-[20px] md:h-[20px]" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold text-hama-gold serif italic">Studio Enrollment</h3>
-                            <p className="text-[9px] text-text-muted uppercase tracking-[0.2em] font-black mt-1">{user?.name} — Enrollment Status</p>
+                            <h3 className="text-lg md:text-xl font-bold text-hama-gold serif italic">Studio Enrollment</h3>
+                            <p className="text-[8px] md:text-[9px] text-text-muted uppercase tracking-[0.2em] font-black mt-1 underline decoration-hama-gold/30 underline-offset-4 truncate max-w-[150px] sm:max-w-none">{user?.name} — Status</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="text-text-muted hover:text-text-primary transition-colors">
@@ -318,82 +318,142 @@ const UserManagement: React.FC = () => {
             {/* Users Table */}
             <div className="glass overflow-hidden bg-bg-secondary relative">
                 <div className="noise opacity-10" />
-                <div className="overflow-x-auto relative z-10">
-                    <table className="w-full text-left">
-                        <thead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted border-b border-white/5">
-                            <tr>
-                                <th className="px-4 md:px-8 py-5">User</th>
-                                <th className="px-4 md:px-8 py-5">Role</th>
-                                <th className="px-4 md:px-8 py-5">Status</th>
-                                <th className="px-4 md:px-8 py-5 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan={4} className="px-8 py-20 text-center">
-                                        <div className="w-8 h-8 border-2 border-hama-gold/20 border-t-hama-gold rounded-full animate-spin mx-auto mb-4" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-text-muted/40 font-sans">Syncing records...</span>
-                                    </td>
-                                </tr>
-                            ) : filteredUsers.length === 0 ? (
-                                <tr>
-                                    <td colSpan={4} className="px-8 py-20 text-center">
-                                        <p className="text-text-muted italic text-sm font-light">No staff or artist records found matching your filters.</p>
-                                    </td>
-                                </tr>
-                            ) : filteredUsers.map((u) => (
-                                <tr key={u.id} className="group hover:bg-white/2 transition-colors">
-                                    <td className="px-4 md:px-8 py-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center font-bold text-base md:text-lg ${u.role === 'Admin' ? 'bg-hama-gold text-black' :
-                                                u.role === 'Teacher' ? 'bg-white/10 text-text-primary' :
-                                                    'bg-white/5 text-text-muted'
-                                                }`}>
-                                                {getInitials(u.name || u.email || 'U')}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="font-bold text-text-primary serif truncate">{u.name || 'Anonymous User'}</p>
-                                                <p className="text-[11px] text-text-muted truncate">{u.email}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 md:px-8 py-6">
-                                        <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${u.role === 'Admin' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                <div className="relative z-10">
+                    {/* Responsive Card List for Mobile */}
+                    <div className="block md:hidden divide-y divide-white/5">
+                        {loading ? (
+                            <div className="px-8 py-20 text-center">
+                                <div className="w-8 h-8 border-2 border-hama-gold/20 border-t-hama-gold rounded-full animate-spin mx-auto mb-4" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-text-muted/40 font-sans">Syncing records...</span>
+                            </div>
+                        ) : filteredUsers.length === 0 ? (
+                            <div className="px-8 py-20 text-center">
+                                <p className="text-text-muted italic text-sm font-light">No records found.</p>
+                            </div>
+                        ) : filteredUsers.map((u) => (
+                            <div key={u.id} className="p-6 space-y-4">
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg ${u.role === 'Admin' ? 'bg-hama-gold text-black' :
+                                        u.role === 'Teacher' ? 'bg-white/10 text-text-primary' :
+                                            'bg-white/5 text-text-muted'
+                                        }`}>
+                                        {getInitials(u.name || u.email || 'U')}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="font-bold text-text-primary serif truncate">{u.name || 'Anonymous User'}</p>
+                                        <p className="text-[11px] text-text-muted truncate">{u.email}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between pt-2">
+                                    <div className="flex flex-col gap-2">
+                                        <span className={`inline-block px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border w-fit ${u.role === 'Admin' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
                                             u.role === 'Teacher' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
                                                 'bg-white/5 text-text-secondary border-white/10'
                                             }`}>
                                             {u.role === 'Teacher' ? 'Instructor' : u.role}
                                         </span>
-                                    </td>
-                                    <td className="px-4 md:px-8 py-6">
                                         <div className="flex items-center gap-2 text-emerald-400">
                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                                             <span className="text-[10px] font-black uppercase tracking-widest font-sans">Active</span>
                                         </div>
-                                    </td>
-                                    <td className="px-4 md:px-8 py-6 text-right">
-                                        <div className="flex items-center justify-end gap-2 md:gap-3 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button
-                                                onClick={() => { setSelectedUser(u); setIsEnrollModalOpen(true); }}
-                                                className="p-2 md:p-3 bg-white/5 border border-white/10 text-text-muted hover:text-hama-gold hover:border-hama-gold/30 rounded-xl transition-all"
-                                                title="Manage Enrollments"
-                                            >
-                                                <GraduationCap size={16} />
-                                            </button>
-                                            <button
-                                                onClick={() => { setSelectedUser(u); setIsModalOpen(true); }}
-                                                className="p-2 md:p-3 bg-white/5 border border-white/10 text-text-muted hover:text-text-primary hover:border-white/30 rounded-xl transition-all"
-                                                title="Edit Profile"
-                                            >
-                                                <ShieldCheck size={16} />
-                                            </button>
-                                        </div>
-                                    </td>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => { setSelectedUser(u); setIsEnrollModalOpen(true); }}
+                                            className="p-3 bg-white/5 border border-white/10 text-text-muted rounded-xl"
+                                        >
+                                            <GraduationCap size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => { setSelectedUser(u); setIsModalOpen(true); }}
+                                            className="p-3 bg-white/5 border border-white/10 text-text-muted rounded-xl"
+                                        >
+                                            <ShieldCheck size={16} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted border-b border-white/5">
+                                <tr>
+                                    <th className="px-8 py-5">User</th>
+                                    <th className="px-8 py-5">Role</th>
+                                    <th className="px-8 py-5">Status</th>
+                                    <th className="px-8 py-5 text-right">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={4} className="px-8 py-20 text-center">
+                                            <div className="w-8 h-8 border-2 border-hama-gold/20 border-t-hama-gold rounded-full animate-spin mx-auto mb-4" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-text-muted/40 font-sans">Syncing records...</span>
+                                        </td>
+                                    </tr>
+                                ) : filteredUsers.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4} className="px-8 py-20 text-center">
+                                            <p className="text-text-muted italic text-sm font-light">No records found.</p>
+                                        </td>
+                                    </tr>
+                                ) : filteredUsers.map((u) => (
+                                    <tr key={u.id} className="group hover:bg-white/2 transition-colors">
+                                        <td className="px-8 py-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg ${u.role === 'Admin' ? 'bg-hama-gold text-black' :
+                                                    u.role === 'Teacher' ? 'bg-white/10 text-text-primary' :
+                                                        'bg-white/5 text-text-muted'
+                                                    }`}>
+                                                    {getInitials(u.name || u.email || 'U')}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="font-bold text-text-primary serif truncate">{u.name || 'Anonymous User'}</p>
+                                                    <p className="text-[11px] text-text-muted truncate">{u.email}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${u.role === 'Admin' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                                                u.role === 'Teacher' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
+                                                    'bg-white/5 text-text-secondary border-white/10'
+                                                }`}>
+                                                {u.role === 'Teacher' ? 'Instructor' : u.role}
+                                            </span>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <div className="flex items-center gap-2 text-emerald-400">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest font-sans">Active</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-6 text-right">
+                                            <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() => { setSelectedUser(u); setIsEnrollModalOpen(true); }}
+                                                    className="p-3 bg-white/5 border border-white/10 text-text-muted hover:text-hama-gold hover:border-hama-gold/30 rounded-xl transition-all"
+                                                    title="Manage Enrollments"
+                                                >
+                                                    <GraduationCap size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => { setSelectedUser(u); setIsModalOpen(true); }}
+                                                    className="p-3 bg-white/5 border border-white/10 text-text-muted hover:text-text-primary hover:border-white/30 rounded-xl transition-all"
+                                                    title="Edit Profile"
+                                                >
+                                                    <ShieldCheck size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 

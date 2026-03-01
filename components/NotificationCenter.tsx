@@ -97,7 +97,7 @@ const NotificationCenter: React.FC = () => {
 
             {/* Dropdown */}
             {isOpen && (
-                <div className="absolute right-0 mt-4 w-96 bg-bg-primary/60 backdrop-blur-2xl border border-hama-gold/10 rounded-3xl shadow-2xl z-[200] overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+                <div className="fixed sm:absolute right-4 sm:right-0 left-4 sm:left-auto mt-4 w-auto sm:w-96 bg-bg-primary/80 sm:bg-bg-primary/60 backdrop-blur-2xl border border-hama-gold/10 rounded-3xl shadow-2xl z-[200] overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
                     <div className="noise opacity-10" />
                     <div className="relative z-10">
                         {/* Header */}
@@ -129,7 +129,7 @@ const NotificationCenter: React.FC = () => {
                                     <div
                                         key={n.id}
                                         onClick={() => !n.isRead && handleMarkAsRead(n.id)}
-                                        className={`p-6 border-b border-white/5 transition-all cursor-pointer group ${n.isRead ? 'opacity-50 hover:opacity-100' : 'bg-hama-gold/5'
+                                        className={`p-5 md:p-6 border-b border-white/5 transition-all cursor-pointer group ${n.isRead ? 'opacity-50 hover:opacity-100' : 'bg-hama-gold/5'
                                             }`}
                                     >
                                         <div className="flex gap-4">

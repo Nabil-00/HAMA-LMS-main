@@ -32,8 +32,17 @@ import {
 const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () => void }) => {
   const [activeModuleId, setActiveModuleId] = useState<string | null>(course.modules[0]?.id || null);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Auto-close sidebar on mobile when window resizes
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) setSidebarOpen(false);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Auto-select first lesson if available and nothing selected
   useEffect(() => {
@@ -73,28 +82,28 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
     // Basic renderer based on type
     if (lesson.type === ContentType.VIDEO_VOD || lesson.type === ContentType.VIDEO_LIVE) {
       return (
-        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto">
-          <div className="aspect-video bg-black rounded-3xl overflow-hidden flex items-center justify-center relative shadow-2xl ring-1 ring-white/10 group">
+        <div className="space-y-6 md:space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto">
+          <div className="aspect-video bg-black rounded-2xl md:rounded-3xl overflow-hidden flex items-center justify-center relative shadow-2xl ring-1 ring-white/10 group">
             {lesson.metadata.streamUrl ? (
-              <div className="text-text-primary flex flex-col items-center gap-6">
-                <div className="w-24 h-24 bg-hama-gold rounded-full flex items-center justify-center text-black shadow-2xl transform group-hover:scale-110 transition-transform cursor-pointer">
-                  <PlayCircle size={48} fill="currentColor" />
+              <div className="text-text-primary flex flex-col items-center gap-4 md:gap-6">
+                <div className="w-16 h-16 md:w-24 md:h-24 bg-hama-gold rounded-full flex items-center justify-center text-black shadow-2xl transform group-hover:scale-110 transition-transform cursor-pointer">
+                  <PlayCircle className="w-[32px] h-[32px] md:w-[48px] md:h-[48px]" fill="currentColor" />
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-hama-gold/60">Now Playing: {lesson.title}</p>
+                <p className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] text-hama-gold/60">Now Playing</p>
               </div>
             ) : (
               <div className="text-text-primary/20 flex flex-col items-center gap-4">
-                <Video size={64} className="opacity-10" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-text-muted">No Video</span>
+                <Video className="w-[48px] h-[48px] md:w-[64px] md:h-[64px] opacity-10" />
+                <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-text-muted">No Video</span>
               </div>
             )}
           </div>
-          <div className="max-w-4xl mx-auto space-y-6 text-center md:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-hama-gold/10 border border-hama-gold/20 text-hama-gold text-[9px] font-black uppercase tracking-widest">
+          <div className="max-w-4xl mx-auto space-y-4 md:space-y-6 text-center md:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-hama-gold/10 border border-hama-gold/20 text-hama-gold text-[8px] md:text-[9px] font-black uppercase tracking-widest">
               Audio Production Series
             </div>
-            <h1 className="text-4xl md:text-6xl font-black text-text-primary serif tracking-tight">{lesson.title}</h1>
-            <div className="text-lg text-text-secondary leading-relaxed font-light">
+            <h1 className="text-2xl md:text-6xl font-black text-text-primary serif tracking-tight">{lesson.title}</h1>
+            <div className="text-sm md:text-lg text-text-secondary leading-relaxed font-light">
               {lesson.content || "Deep silence accompanies this module. Insights pending."}
             </div>
           </div>
@@ -104,17 +113,17 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
 
     if (lesson.type === ContentType.EMBED) {
       return (
-        <div className="space-y-12 animate-in fade-in duration-700 max-w-6xl mx-auto">
+        <div className="space-y-6 md:space-y-12 animate-in fade-in duration-700 max-w-6xl mx-auto">
           {lesson.metadata.embedCode ? (
-            <div className="aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/10" dangerouslySetInnerHTML={{ __html: lesson.metadata.embedCode }} />
+            <div className="aspect-video bg-black rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/10" dangerouslySetInnerHTML={{ __html: lesson.metadata.embedCode }} />
           ) : (
-            <div className="aspect-video bg-white/5 rounded-3xl flex items-center justify-center text-text-primary/20 border border-dashed border-white/10">
-              <Code size={64} />
+            <div className="aspect-video bg-white/5 rounded-2xl md:rounded-3xl flex items-center justify-center text-text-primary/20 border border-dashed border-white/10">
+              <Code className="w-[48px] h-[48px] md:w-[64px] md:h-[64px]" />
             </div>
           )}
-          <div className="max-w-4xl mx-auto space-y-6">
-            <h1 className="text-4xl font-bold text-text-primary serif">{lesson.title}</h1>
-            <div className="text-lg text-text-secondary leading-relaxed font-light">
+          <div className="max-w-4xl mx-auto space-y-4 md:space-y-6">
+            <h1 className="text-2xl md:text-4xl font-bold text-text-primary serif">{lesson.title}</h1>
+            <div className="text-sm md:text-lg text-text-secondary leading-relaxed font-light">
               {lesson.content}
             </div>
           </div>
@@ -125,24 +134,24 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
     // Default / Text / Audio / etc
     return (
       <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="flex items-center gap-4 text-hama-gold mb-12">
-          <span className="p-3 bg-hama-gold/10 border border-hama-gold/20 rounded-2xl">
+        <div className="flex items-center gap-3 md:gap-4 text-hama-gold mb-6 md:mb-12">
+          <span className="p-2 md:p-3 bg-hama-gold/10 border border-hama-gold/20 rounded-xl md:rounded-2xl">
             {getIconForType(lesson.type)}
           </span>
-          <span className="text-[11px] font-black uppercase tracking-[0.3em] text-hama-gold">{lesson.type.replace('_', ' ')}</span>
+          <span className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.3em] text-hama-gold">{lesson.type.replace('_', ' ')}</span>
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-black text-text-primary mb-12 serif leading-[1]">
+        <h1 className="text-3xl md:text-7xl font-black text-text-primary mb-6 md:mb-12 serif leading-tight">
           {lesson.title}
         </h1>
 
-        <div className="text-xl text-text-secondary leading-relaxed font-light space-y-6">
+        <div className="text-base md:text-xl text-text-secondary leading-relaxed font-light space-y-4 md:space-y-6">
           {lesson.content ? (
             <div className="whitespace-pre-wrap font-sans">{lesson.content}</div>
           ) : (
-            <div className="p-20 text-center bento-card border-dashed border-white/10 text-text-muted bg-transparent">
+            <div className="p-10 md:p-20 text-center bento-card border-dashed border-white/10 text-text-muted bg-transparent">
               <FileText size={48} className="mx-auto mb-4 opacity-10" />
-              <p className="text-sm font-bold uppercase tracking-widest">No content yet</p>
+              <p className="text-[10px] md:text-sm font-bold uppercase tracking-widest">No content yet</p>
             </div>
           )}
         </div>
@@ -167,7 +176,7 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
             <ArrowLeft size={24} />
           </button>
           <div>
-            <h3 className="text-xl md:text-4xl font-bold text-hama-gold serif italic truncate">
+            <h3 className="text-lg md:text-4xl font-bold text-hama-gold serif italic truncate">
               {course.title}
             </h3>
             <p className="text-[8px] md:text-[10px] text-text-muted flex items-center gap-2 md:gap-4 font-black uppercase tracking-[0.2em] mt-1">
@@ -200,7 +209,7 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
       <div className="flex flex-1 overflow-hidden relative z-10">
         {/* Sidebar: Syllabus */}
         {sidebarOpen && (
-          <div className="fixed md:relative inset-y-0 left-0 w-80 md:w-96 glass border-r border-hama-gold/10 overflow-y-auto flex flex-col transition-all duration-300 z-50 md:z-10 h-full md:h-auto">
+          <div className="fixed md:relative inset-y-0 left-0 w-full sm:w-80 md:w-96 glass border-r border-hama-gold/10 overflow-y-auto flex flex-col transition-all duration-300 z-50 md:z-10 h-full md:h-auto">
             <div className="p-6 md:p-8 border-b border-hama-gold/5 flex items-center justify-between md:block">
               <div className="flex flex-col">
                 <div className="flex items-center justify-between mb-2 md:mb-4">
@@ -402,7 +411,7 @@ const CourseList: React.FC = () => {
                   {new Date(course.lastModified).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                 </div>
 
-                <h3 className="font-bold text-sm md:text-2xl text-hama-gold mb-1 md:mb-4 serif leading-tight group-hover:text-hama-gold transition-colors line-clamp-2">
+                <h3 className="font-bold text-lg md:text-2xl text-hama-gold mb-1 md:mb-4 serif leading-tight group-hover:text-hama-gold transition-colors line-clamp-2">
                   {course.title}
                 </h3>
 
@@ -431,7 +440,7 @@ const CourseList: React.FC = () => {
 
                     <button
                       onClick={() => setSelectedCourse(course)}
-                      className="w-full sm:w-auto flex items-center justify-center gap-1.5 md:gap-2 px-2 md:px-3 py-2 md:py-2.5 bg-hama-gold text-black text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] rounded-lg md:rounded-xl hover:bg-text-primary transition-all shadow-xl shadow-hama-gold/10"
+                      className="w-full sm:w-auto flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-3 py-2 md:py-2.5 bg-hama-gold text-black text-[10px] md:text-[10px] font-black uppercase tracking-[0.2em] rounded-lg md:rounded-xl hover:bg-text-primary transition-all shadow-xl shadow-hama-gold/10"
                     >
                       <PlayCircle size={14} className="shrink-0" /> <span>Start</span>
                     </button>

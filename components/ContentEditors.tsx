@@ -335,7 +335,7 @@ export const EmbedEditor: React.FC<EditorProps> = ({ metadata, onChange }) => {
                   <div className="flex items-center gap-3 mb-4 text-hama-gold font-black text-[10px] uppercase tracking-[0.2em] relative z-10">
                      <RefreshCw size={14} /> Intelligence Generator
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                      <input
                         type="text"
                         className={`flex-1 px-4 py-3 rounded-xl border ${inputBaseClass}`}
@@ -346,7 +346,7 @@ export const EmbedEditor: React.FC<EditorProps> = ({ metadata, onChange }) => {
                      <button
                         onClick={generateEmbedCode}
                         disabled={!urlInput}
-                        className="px-6 py-3 bg-hama-gold text-black rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-30 transition-all hover:bg-text-primary active:scale-95 relative z-10"
+                        className="px-6 py-3 bg-hama-gold text-black rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-30 transition-all hover:bg-text-primary active:scale-95 relative z-10 w-full sm:w-auto"
                      >
                         Generate
                      </button>

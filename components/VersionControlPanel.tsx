@@ -32,14 +32,14 @@ const VersionControlPanel: React.FC<VersionControlPanelProps> = ({ course, onPub
         <div className="relative z-10 flex flex-col h-full">
 
           {/* Header */}
-          <div className="bg-bg-primary border-b border-hama-gold/10 px-8 py-6 flex justify-between items-center z-20 sticky top-0 backdrop-blur-xl">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-hama-gold/10 border border-hama-gold/20 rounded-xl flex items-center justify-center text-hama-gold">
-                <GitCommit size={20} />
+          <div className="bg-bg-primary border-b border-hama-gold/10 px-6 md:px-8 py-5 md:py-6 flex justify-between items-center z-20 sticky top-0 backdrop-blur-xl">
+            <div className="flex items-center gap-3 md:gap-4 font-sans">
+              <div className="w-9 h-9 md:w-10 md:h-10 bg-hama-gold/10 border border-hama-gold/20 rounded-xl flex items-center justify-center text-hama-gold">
+                <GitCommit className="w-[18px] h-[18px] md:w-[20px] md:h-[20px]" />
               </div>
               <div>
-                <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-text-primary">Project Versions</h2>
-                <p className="text-[10px] font-bold text-hama-gold/60 uppercase tracking-widest mt-0.5">Active Revision: v{course.currentVersion}</p>
+                <h2 className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] text-text-primary">Project Versions</h2>
+                <p className="text-[9px] md:text-[10px] font-bold text-hama-gold/60 uppercase tracking-widest mt-0.5">Active Revision: v{course.currentVersion}</p>
               </div>
             </div>
             <button onClick={onClose} className="p-2 text-text-muted hover:text-text-primary transition-colors bg-white/5 rounded-lg border border-white/5">
@@ -66,7 +66,7 @@ const VersionControlPanel: React.FC<VersionControlPanelProps> = ({ course, onPub
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto px-8 py-8 scrollbar-none">
+          <div className="flex-1 overflow-y-auto px-6 md:px-8 py-6 md:py-8 scrollbar-none">
 
             {/* PUBLISH TAB */}
             {activeTab === 'publish' && (

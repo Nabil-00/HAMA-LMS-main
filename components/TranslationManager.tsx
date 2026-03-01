@@ -72,7 +72,7 @@ const TranslationManager: React.FC<TranslationManagerProps> = ({
             </button>
 
             {isAdding && (
-              <div className="absolute top-full left-0 mt-3 w-64 glass border-hama-gold/20 bg-bg-secondary py-2 z-50 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
+              <div className="absolute top-full right-0 md:left-0 mt-3 w-64 glass border-hama-gold/20 bg-bg-secondary py-2 z-50 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
                 <div className="noise opacity-10" />
                 <div className="px-4 py-2 text-[9px] font-black text-text-muted bg-white/5 border-b border-white/5 uppercase tracking-[0.2em] font-sans relative z-10">
                   Select Language

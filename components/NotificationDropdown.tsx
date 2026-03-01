@@ -27,7 +27,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     onClose
 }) => {
     return (
-        <div className="absolute top-16 right-0 w-96 glass-elevated rounded-3xl border border-hama-gold/20 shadow-2xl z-[100] animate-in fade-in slide-in-from-top-4 duration-300 overflow-hidden backdrop-blur-3xl bg-bg-primary/90">
+        <div className="absolute top-16 right-0 sm:right-0 w-[calc(100vw-2rem)] sm:w-96 glass-elevated rounded-3xl border border-hama-gold/20 shadow-2xl z-[100] animate-in fade-in slide-in-from-top-4 duration-300 overflow-hidden backdrop-blur-3xl bg-bg-primary/90 mx-4 sm:mx-0">
             <div className="p-6 border-b border-white/5 flex items-center justify-between">
                 <div>
                     <h3 className="text-lg font-bold serif text-text-primary">Intelligence</h3>

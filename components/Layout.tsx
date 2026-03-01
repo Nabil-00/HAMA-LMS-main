@@ -138,13 +138,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
         {/* Header */}
-        <header className="flex items-center justify-between px-4 md:px-8 h-20 md:h-24 glass border-b border-hama-gold/10">
-          <div className="flex items-center gap-4">
+        <header className="flex items-center justify-between px-4 md:px-8 h-16 md:h-24 glass border-b border-hama-gold/10 shrink-0">
+          <div className="flex items-center gap-2 md:gap-4">
             <button
-              className="md:hidden p-2 text-text-secondary"
+              className="md:hidden p-2 text-hama-gold bg-hama-gold/5 rounded-xl border border-hama-gold/10"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              <Menu size={24} />
+              <Menu size={20} />
             </button>
             <div className="relative hidden lg:block">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={16} />
@@ -156,9 +156,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 md:gap-6">
             {user?.role === 'Admin' && (
-              <div className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-hama-gold/10 text-hama-gold border border-hama-gold/20 rounded-full text-[9px] font-black uppercase tracking-widest">
+              <div className="hidden sm:flex items-center gap-2 px-4 py-1.5 bg-hama-gold/10 text-hama-gold border border-hama-gold/20 rounded-full text-[9px] font-black uppercase tracking-widest">
                 <ShieldAlert size={14} /> Production Mode
               </div>
             )}
@@ -168,7 +168,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </header>
 
         {/* Scrollable Content */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-12 scroll-smooth">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-12 scroll-smooth">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>

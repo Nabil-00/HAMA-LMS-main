@@ -6,6 +6,7 @@ import CourseBuilder from './components/CourseBuilder';
 import CourseList from './components/CourseList';
 import UserManagement from './components/UserManagement';
 import Login from './components/Login';
+import Signup from './components/Signup';
 import { ToastProvider, useToast } from './components/Toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { UserRole } from './types';
@@ -45,8 +46,9 @@ const App: React.FC = () => {
       <ToastProvider>
         <HashRouter>
           <Routes>
-            {/* Public Route */}
+            {/* Public Routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
 
             {/* Protected Layout */}
             <Route element={

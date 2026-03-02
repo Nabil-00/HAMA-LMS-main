@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Course, Module, Lesson, ContentType } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { getCourses } from '../services/courseService';
+import { getUserEnrollments, enrollUser } from '../services/userService';
+import { initializePaystack, loadPaystackScript } from '../services/paystackService';
 import {
   Search,
   Filter,
@@ -316,18 +318,87 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
 // --- COURSE LIST COMPONENT ---
 const CourseList: React.FC = () => {
   const navigate = useNavigate();
-  const { hasRole } = useAuth();
+  const { user, hasRole } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
+  const [enrollments, setEnrollments] = useState<string[]>([]); // Array of courseIds
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
-    const loadCourses = async () => {
-      const fetchedCourses = await getCourses();
-      setCourses(fetchedCourses);
-    };
+    loadPaystackScript().catch(console.error);
     loadCourses();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      loadEnrollments();
+    }
+  }, [user]);
+
+  const loadCourses = async () => {
+    const fetchedCourses = await getCourses();
+    setCourses(fetchedCourses);
+  };
+
+  const loadEnrollments = async () => {
+    if (!user) return;
+    const fetched = await getUserEnrollments(user.id);
+    setEnrollments(fetched.map(e => e.courseId));
+  };
+
+  const handleStartCourse = async (course: Course) => {
+    // 1. Check if allowed by role
+    if (hasRole(['Admin', 'Teacher'])) {
+      setSelectedCourse(course);
+      return;
+    }
+
+    // 2. Check if free
+    if (course.isFree) {
+      setSelectedCourse(course);
+      return;
+    }
+
+    // 3. Check if already enrolled
+    if (enrollments.includes(course.id)) {
+      setSelectedCourse(course);
+      return;
+    }
+
+    // 4. Trigger Paystack
+    const publicKey = (import.meta as any).env.VITE_PAYSTACK_PUBLIC_KEY;
+    if (!publicKey || publicKey === 'pk_test_placeholder') {
+      alert("Payment system is being configured. Please contact admin.");
+      return;
+    }
+
+    setIsProcessingPayment(true);
+    initializePaystack({
+      key: publicKey,
+      email: user?.email || '',
+      amount: course.price,
+      metadata: {
+        courseId: course.id,
+        userId: user?.id || ''
+      },
+      onSuccess: async (res) => {
+        try {
+          // In production, verify transaction on backend first
+          await enrollUser(user!.id, course.id, 'SYSTEM');
+          await loadEnrollments();
+          setSelectedCourse(course);
+        } catch (e) {
+          console.error("Enrollment failed", e);
+        } finally {
+          setIsProcessingPayment(false);
+        }
+      },
+      onCancel: () => {
+        setIsProcessingPayment(false);
+      }
+    });
+  };
 
   const filteredCourses = courses.filter((c: Course) =>
     (c.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -395,12 +466,20 @@ const CourseList: React.FC = () => {
                 </div>
 
                 <div className="absolute bottom-4 left-4 z-10">
-                  <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border ${course.status === 'Published'
-                    ? 'bg-hama-gold text-black border-hama-gold'
-                    : 'bg-white/5 text-text-secondary border-white/10'
-                    }`}>
-                    {course.status}
-                  </span>
+                  <div className="flex flex-col gap-2">
+                    <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border ${course.status === 'Published'
+                      ? 'bg-hama-gold text-black border-hama-gold'
+                      : 'bg-white/5 text-text-secondary border-white/10'
+                      }`}>
+                      {course.status}
+                    </span>
+                    <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border ${course.isFree
+                      ? 'bg-white/10 text-text-muted border-white/10'
+                      : 'bg-hama-gold/20 text-hama-gold border-hama-gold/30'
+                      }`}>
+                      {course.isFree ? 'Free Access' : `₦${course.price?.toLocaleString()}`}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -439,10 +518,19 @@ const CourseList: React.FC = () => {
                     )}
 
                     <button
-                      onClick={() => setSelectedCourse(course)}
-                      className="w-full sm:w-auto flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-3 py-2 md:py-2.5 bg-hama-gold text-black text-[10px] md:text-[10px] font-black uppercase tracking-[0.2em] rounded-lg md:rounded-xl hover:bg-text-primary transition-all shadow-xl shadow-hama-gold/10"
+                      onClick={() => handleStartCourse(course)}
+                      disabled={isProcessingPayment}
+                      className="w-full sm:w-auto flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-3 py-2 md:py-2.5 bg-hama-gold text-black text-[10px] md:text-[10px] font-black uppercase tracking-[0.2em] rounded-lg md:rounded-xl hover:bg-text-primary transition-all shadow-xl shadow-hama-gold/10 disabled:opacity-50"
                     >
-                      <PlayCircle size={14} className="shrink-0" /> <span>Start</span>
+                      <PlayCircle size={14} className="shrink-0" />
+                      <span>
+                        {isProcessingPayment
+                          ? 'Processing...'
+                          : (enrollments.includes(course.id) || course.isFree || hasRole(['Admin', 'Teacher']))
+                            ? 'Start'
+                            : 'Order'
+                        }
+                      </span>
                     </button>
                   </div>
                 </div>

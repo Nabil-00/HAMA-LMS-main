@@ -75,7 +75,7 @@ const CertificatePreview: React.FC<CertificateProps> = ({
                         </div>
                         <div>
                             <h2 className="text-lg md:text-xl font-bold text-text-primary serif">Certification Earned</h2>
-                            <p className="text-[9px] md:text-[10px] text-text-muted uppercase tracking-[0.2em] font-black">Issued by Hausa Music Academy</p>
+                            <p className="text-xs md:text-[10px] text-text-muted uppercase tracking-[0.2em] font-black">Issued by Hausa Music Academy</p>
                         </div>
                     </div>
                     <div className="flex flex-wrap justify-center gap-3 md:gap-4">
@@ -83,7 +83,7 @@ const CertificatePreview: React.FC<CertificateProps> = ({
                             onClick={handleShare}
                             className="flex items-center gap-2 md:gap-3 px-4 md:px-6 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-text-muted hover:text-hama-gold hover:bg-white/10 transition-all"
                         >
-                            <Share2 size={14} /> <span className="hidden sm:inline">Share Link</span><span className="sm:hidden">Share</span>
+                            <Share2 size={14} /> <span className="hidden sm:inline">Share Link</span><span className="sm:hidden text-xs">Share</span>
                         </button>
                         <button
                             onClick={handleDownload}
@@ -92,7 +92,7 @@ const CertificatePreview: React.FC<CertificateProps> = ({
                         >
                             <Download size={14} className={isGenerating ? 'animate-bounce' : ''} />
                             <span className="hidden sm:inline">{isGenerating ? 'Generating...' : 'Download PDF'}</span>
-                            <span className="sm:hidden">{isGenerating ? 'Wait...' : 'Download'}</span>
+                            <span className="sm:hidden text-xs">{isGenerating ? 'Wait...' : 'Download'}</span>
                         </button>
                         {onClose && (
                             <button
@@ -114,7 +114,7 @@ const CertificatePreview: React.FC<CertificateProps> = ({
                         <div className="mb-4 md:mb-8 p-3 md:p-4 bg-hama-gold/10 rounded-full">
                             <Award className="text-hama-gold w-10 h-10 md:w-16 md:h-16" />
                         </div>
-                        <h3 className="text-[8px] md:text-[12px] font-black uppercase tracking-[0.3em] md:tracking-[0.6em] text-hama-gold mb-6 md:mb-10">Certificate of Completion</h3>
+                        <h3 className="text-xs md:text-[12px] font-black uppercase tracking-[0.3em] md:tracking-[0.6em] text-hama-gold mb-6 md:mb-10">Certificate of Completion</h3>
 
                         <p className="text-[12px] md:text-[16px] font-medium serif italic text-gray-500 mb-2 md:mb-4">This is to certify that</p>
                         <h4 className="text-2xl md:text-5xl lg:text-6xl font-black serif mb-4 md:mb-8 tracking-tight text-black border-b-2 border-hama-gold/30 pb-2 md:pb-4 inline-block">{studentName}</h4>
@@ -127,7 +127,7 @@ const CertificatePreview: React.FC<CertificateProps> = ({
                         <div className="text-center md:text-left border-l-0 md:border-l-2 border-hama-gold/20 pl-0 md:pl-6">
                             <div className="flex items-center justify-center md:justify-start gap-2 text-gray-400 mb-1 md:mb-2">
                                 <Calendar className="w-[12px] h-[12px] md:w-[14px] md:h-[14px]" />
-                                <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] leading-none">Date of Issue</span>
+                                <span className="text-xs md:text-[9px] font-black uppercase tracking-[0.2em] leading-none">Date of Issue</span>
                             </div>
                             <div className="text-[12px] md:text-[15px] font-bold serif">{completionDate}</div>
                         </div>
@@ -137,12 +137,12 @@ const CertificatePreview: React.FC<CertificateProps> = ({
                                 <img src="/hama_logo.png" alt="Seal" className="w-14 h-14 md:w-20 md:h-20 object-contain brightness-0 contrast-200 opacity-90" />
                                 <div className="absolute inset-0 bg-hama-gold/5 rounded-full" />
                             </div>
-                            <div className="text-[8px] md:text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] font-sans">{certificateId}</div>
+                            <div className="text-[10px] md:text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] font-sans">{certificateId}</div>
                         </div>
 
                         <div className="text-center md:text-right border-r-0 md:border-r-2 border-hama-gold/20 pr-0 md:pr-6">
                             <div className="flex items-center justify-center md:justify-end gap-2 text-gray-400 mb-2 md:mb-4">
-                                <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] leading-none">Authorized Signatory</span>
+                                <span className="text-xs md:text-[9px] font-black uppercase tracking-[0.2em] leading-none">Authorized Signatory</span>
                             </div>
                             <div className="h-[1px] md:h-[2px] w-full bg-gradient-to-l from-hama-gold/40 to-transparent mb-2 md:mb-4 hidden md:block" />
                             <div className="text-[12px] md:text-[15px] font-bold serif">HAMA Academy Management</div>

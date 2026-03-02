@@ -51,6 +51,8 @@ CREATE TABLE public.courses (
   modules JSONB DEFAULT '[]'::jsonb,
   versions JSONB DEFAULT '[]'::jsonb,
   auditLog JSONB DEFAULT '[]'::jsonb,
+  price NUMERIC DEFAULT 0,
+  is_free BOOLEAN DEFAULT true,
   last_modified TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -82,6 +84,7 @@ CREATE POLICY "Maestros can manage courses" ON public.courses FOR ALL USING (EXI
 -- Enrollments: Users can see their own, Admins see all
 CREATE POLICY "Users can view own enrollments" ON public.enrollments FOR SELECT USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'Admin'));
 CREATE POLICY "Admins can manage enrollments" ON public.enrollments FOR ALL USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'Admin'));
+CREATE POLICY "Students can enroll themselves" ON public.enrollments FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- --- CRON JOB (pg_cron) ---
 -- To enable this, go to Database -> Extensions in Supabase and enable "pg_cron".

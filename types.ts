@@ -112,6 +112,10 @@ export interface Course {
   supportedLocales: string[];
   localizations: Record<string, LocalizedContent>;
 
+  // Monetization
+  price: number;
+  isFree: boolean;
+
   // Versioning & Compliance
   currentVersion: string; // e.g. "0.0.1" (Draft) or "1.0.0" (Live)
   versions: CourseVersion[];

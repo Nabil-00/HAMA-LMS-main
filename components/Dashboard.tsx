@@ -40,16 +40,16 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon: Icon, o
   >
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-1.5 md:gap-2 mb-1.5 md:mb-2">
-        <p className="text-[9px] md:text-[10px] font-black text-text-muted uppercase tracking-[0.2em] md:tracking-[0.3em] truncate">{title}</p>
+        <p className="text-xs md:text-[10px] font-black text-text-muted uppercase tracking-[0.2em] md:tracking-[0.3em] truncate">{title}</p>
         {onClick && (
-          <span className="text-[7px] md:text-[8px] font-black text-hama-gold bg-hama-gold/10 px-1 md:px-1.5 py-0.5 rounded border border-hama-gold/20 uppercase tracking-widest animate-pulse shrink-0">
+          <span className="text-[10px] md:text-[8px] font-black text-hama-gold bg-hama-gold/10 px-1 md:px-1.5 py-0.5 rounded border border-hama-gold/20 uppercase tracking-widest animate-pulse shrink-0">
             Preview
           </span>
         )}
       </div>
       <div className="flex items-end gap-1.5 md:gap-2 flex-wrap">
         <h4 className="text-lg md:text-3xl lg:text-4xl font-black text-hama-gold tracking-tighter md:tracking-tight font-sans truncate lead-none">{value}</h4>
-        <span className={`text-[7px] md:text-[9px] font-bold px-1.5 md:px-2 py-0.5 rounded-full mb-0.5 md:mb-1 shrink-0 ${change.startsWith('+') ? 'bg-hama-success/10 text-hama-success' : 'bg-red-500/10 text-red-500'}`}>
+        <span className={`text-[10px] md:text-[9px] font-bold px-1.5 md:px-2 py-0.5 rounded-full mb-0.5 md:mb-1 shrink-0 ${change.startsWith('+') ? 'bg-hama-success/10 text-hama-success' : 'bg-red-500/10 text-red-500'}`}>
           {change}
         </span>
       </div>
@@ -120,7 +120,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-12">
       <div className="mb-12">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-hama-gold/5 border border-hama-gold/10 text-hama-gold text-[10px] font-bold uppercase tracking-[0.3em] mb-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-hama-gold/5 border border-hama-gold/10 text-hama-gold text-xs font-bold uppercase tracking-[0.3em] mb-4">
           Welcome Back
         </div>
         <h1 className="text-4xl md:text-5xl font-bold serif mb-4 text-text-primary">
@@ -130,7 +130,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {user?.role === 'Student' ? (
           <>
             <StatCard title="My Courses" value={recentActivity.length} change="Live" icon={BookOpen} />
@@ -203,13 +203,13 @@ const Dashboard: React.FC = () => {
           <h3 className="text-xl font-bold serif text-text-primary">
             {user?.role === 'Student' ? 'My Recent Progress' : 'Recent Activity'}
           </h3>
-          <button className="text-[10px] font-black uppercase tracking-[0.2em] text-hama-gold/60 hover:text-hama-gold transition-colors">View All</button>
+          <button className="text-xs font-black uppercase tracking-[0.2em] text-hama-gold/60 hover:text-hama-gold transition-colors">View All</button>
         </div>
         <div className="relative z-10">
           {/* Desktop Table */}
           <div className="hidden md:block overflow-x-auto text-sm">
             <table className="w-full text-left">
-              <thead className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20">
+              <thead className="text-xs font-black uppercase tracking-[0.2em] text-white/20">
                 <tr className="border-b border-white/5">
                   {user?.role !== 'Student' && <th className="px-8 py-4">Student</th>}
                   <th className="px-8 py-4">Module</th>
@@ -228,7 +228,7 @@ const Dashboard: React.FC = () => {
                       {activity.status === 'Completed' && (
                         <button
                           onClick={() => setShowCertPreview(true)}
-                          className="opacity-0 group-hover:opacity-100 flex items-center gap-2 text-[10px] font-black text-hama-gold uppercase tracking-widest transition-all hover:underline"
+                          className="opacity-0 group-hover:opacity-100 flex items-center gap-2 text-xs font-black text-hama-gold uppercase tracking-widest transition-all hover:underline"
                         >
                           <Eye size={12} /> View Cert
                         </button>
@@ -250,18 +250,18 @@ const Dashboard: React.FC = () => {
                     {user?.role !== 'Student' && <p className="text-xs text-hama-gold mt-1">Student: {activity.userName}</p>}
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <span className="px-2 py-0.5 rounded-full bg-white/5 text-[8px] font-black uppercase tracking-widest text-text-muted shrink-0">{activity.status}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-white/5 text-[10px] font-black uppercase tracking-widest text-text-muted shrink-0">{activity.status}</span>
                     {activity.status === 'Completed' && (
                       <button
                         onClick={() => setShowCertPreview(true)}
-                        className="text-[8px] font-black text-hama-gold uppercase tracking-widest flex items-center gap-1"
+                        className="text-[10px] font-black text-hama-gold uppercase tracking-widest flex items-center gap-1"
                       >
                         <Eye size={10} /> Preview
                       </button>
                     )}
                   </div>
                 </div>
-                <p className="text-[9px] text-text-muted uppercase tracking-widest">{new Date(activity.time).toLocaleDateString()}</p>
+                <p className="text-[10px] text-text-muted uppercase tracking-widest">{new Date(activity.time).toLocaleDateString()}</p>
               </div>
             ))}
           </div>

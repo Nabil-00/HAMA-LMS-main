@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, ShieldCheck, Globe, UserCog, GraduationCap, School } from 'lucide-react';
 import { useToast } from './Toast';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,13 +8,19 @@ import { UserRole } from '../types';
 const Login = () => {
    const navigate = useNavigate();
    const { addToast } = useToast();
-   const { login } = useAuth();
+   const { user, isAuthenticated, login, signInWithGoogle } = useAuth();
 
    const [email, setEmail] = useState('');
    const [password, setPassword] = useState('');
    const [showPassword, setShowPassword] = useState(false);
    const [isLoading, setIsLoading] = useState(false);
    const [error, setError] = useState('');
+
+   React.useEffect(() => {
+      if (isAuthenticated && !isLoading) {
+         navigate('/');
+      }
+   }, [isAuthenticated, navigate, isLoading]);
 
 
 
@@ -59,13 +65,13 @@ const Login = () => {
                      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
                         <ShieldCheck className="text-hama-gold" size={20} />
                      </div>
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50">Verified</span>
+                     <span className="text-xs font-black uppercase tracking-[0.2em] opacity-50">Verified</span>
                   </div>
                   <div className="flex items-center gap-4 text-text-muted">
                      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
                         <Globe className="text-hama-gold" size={20} />
                      </div>
-                     <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50">Industry Standard</span>
+                     <span className="text-xs font-black uppercase tracking-[0.2em] opacity-50">Industry Standard</span>
                   </div>
                </div>
             </div>
@@ -81,80 +87,103 @@ const Login = () => {
                   </div>
                   <div className="space-y-3">
                      <h1 className="text-3xl font-black text-text-primary uppercase tracking-[0.3em] font-sans">Access Portal</h1>
-                   <p className="text-[10px] text-text-muted font-bold uppercase tracking-[0.4em] max-w-[280px] mx-auto leading-relaxed">
-                      Sign in to continue.
-                   </p>
+                     <p className="text-xs text-text-muted font-bold uppercase tracking-[0.4em] max-w-[280px] mx-auto leading-relaxed">
+                        Sign in to continue.
+                     </p>
                   </div>
                </div>
 
-               <form onSubmit={handleLogin} className="space-y-8">
+               <div className="space-y-6">
+                  <button
+                     type="button"
+                     onClick={() => signInWithGoogle()}
+                     className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center gap-3 hover:bg-white/10 transition-all text-xs font-black uppercase tracking-widest group"
+                  >
+                     <Globe className="text-hama-gold group-hover:rotate-12 transition-transform" size={18} />
+                     Continue with Google
+                  </button>
 
-
-
-                  <div className="space-y-6">
-                     <div className="space-y-2">
-                        <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] ml-1">Email Address</label>
-                        <div className="relative group">
-                           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-hama-gold transition-colors" size={18} />
-                           <input
-                              type="email"
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              className="w-full pl-12 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl focus:border-hama-gold outline-none text-text-primary transition-all placeholder:text-white/10 text-sm font-medium"
-                              placeholder="artist@hama.academy"
-                              required
-                           />
-                        </div>
-                     </div>
-
-                     <div className="space-y-2">
-                        <div className="flex justify-between items-center ml-1">
-                           <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em]">Password</label>
-                        </div>
-                        <div className="relative group">
-                           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-hama-gold transition-colors" size={18} />
-                           <input
-                              type={showPassword ? "text" : "password"}
-                              value={password}
-                              onChange={(e) => setPassword(e.target.value)}
-                              className="w-full pl-12 pr-14 py-4 bg-white/5 border border-white/10 rounded-2xl focus:border-hama-gold outline-none text-text-primary transition-all placeholder:text-white/10 text-sm font-medium"
-                              placeholder="••••••••"
-                              required
-                           />
-                           <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-hama-gold transition-all"
-                           >
-                              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                           </button>
-                        </div>
+                  <div className="relative py-2">
+                     <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
+                     <div className="relative flex justify-center text-[10px] uppercase tracking-[0.3em] font-black text-text-muted">
+                        <span className="bg-bg-primary px-4">Or use email</span>
                      </div>
                   </div>
 
-                  {error && (
-                     <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest rounded-2xl animate-in fade-in slide-in-from-top-2">
-                        <AlertCircle size={16} />
-                        {error}
-                     </div>
-                  )}
+                  <form onSubmit={handleLogin} className="space-y-8">
 
-                  <button
-                     type="submit"
-                     disabled={isLoading}
-                     className="w-full py-5 bg-hama-gold text-white font-black text-xs uppercase tracking-[0.4em] rounded-2xl shadow-xl shadow-hama-gold/10 hover:shadow-hama-gold/40 hover:bg-[#FADC7A] hover:text-black hover:scale-[1.01] transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden pulse-glow"
-                  >
-                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite] pointer-events-none" />
-                     {isLoading ? (
-                        <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                     ) : (
-                        <span className="relative z-10 flex items-center gap-3">
-                           Sign In
-                           <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform duration-300" />
-                        </span>
+
+
+                     <div className="space-y-6">
+                        <div className="space-y-2">
+                           <label className="text-xs font-black text-text-muted uppercase tracking-[0.3em] ml-1">Email Address</label>
+                           <div className="relative group">
+                              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-hama-gold transition-colors" size={18} />
+                              <input
+                                 type="email"
+                                 value={email}
+                                 onChange={(e) => setEmail(e.target.value)}
+                                 className="w-full pl-12 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl focus:border-hama-gold outline-none text-text-primary transition-all placeholder:text-white/10 text-sm font-medium"
+                                 placeholder="artist@hama.academy"
+                                 required
+                              />
+                           </div>
+                        </div>
+
+                        <div className="space-y-2">
+                           <div className="flex justify-between items-center ml-1">
+                              <label className="text-xs font-black text-text-muted uppercase tracking-[0.3em]">Password</label>
+                           </div>
+                           <div className="relative group">
+                              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-hama-gold transition-colors" size={18} />
+                              <input
+                                 type={showPassword ? "text" : "password"}
+                                 value={password}
+                                 onChange={(e) => setPassword(e.target.value)}
+                                 className="w-full pl-12 pr-14 py-4 bg-white/5 border border-white/10 rounded-2xl focus:border-hama-gold outline-none text-text-primary transition-all placeholder:text-white/10 text-sm font-medium"
+                                 placeholder="••••••••"
+                                 required
+                              />
+                              <button
+                                 type="button"
+                                 onClick={() => setShowPassword(!showPassword)}
+                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-hama-gold transition-all"
+                              >
+                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                              </button>
+                           </div>
+                        </div>
+                     </div>
+
+                     {error && (
+                        <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-black uppercase tracking-widest rounded-2xl animate-in fade-in slide-in-from-top-2">
+                           <AlertCircle size={16} />
+                           {error}
+                        </div>
                      )}
-                  </button>
-               </form>
+
+                     <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full py-5 bg-hama-gold text-white font-black text-xs uppercase tracking-[0.4em] rounded-2xl shadow-xl shadow-hama-gold/10 hover:shadow-hama-gold/40 hover:bg-[#FADC7A] hover:text-black hover:scale-[1.01] transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden pulse-glow"
+                     >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite] pointer-events-none" />
+                        {isLoading ? (
+                           <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                        ) : (
+                           <span className="relative z-10 flex items-center gap-3">
+                              Sign In
+                              <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform duration-300" />
+                           </span>
+                        )}
+                     </button>
+                  </form>
+
+                  <p className="text-center text-xs text-text-muted font-bold tracking-widest uppercase mt-8">
+                     New to the Academy?{' '}
+                     <Link to="/signup" className="text-hama-gold hover:underline transition-all">Create Account</Link>
+                  </p>
+               </div>
             </div>
          </div>
       </div>

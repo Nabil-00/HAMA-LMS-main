@@ -64,7 +64,9 @@ const CourseBuilder: React.FC = () => {
         localizations: {},
         currentVersion: '0.0.1',
         versions: [],
-        auditLog: []
+        auditLog: [],
+        price: 0,
+        isFree: true
     });
 
     const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1024);
@@ -885,6 +887,52 @@ const CourseBuilder: React.FC = () => {
                                             />
                                         </div>
                                     </div>
+
+                                    {/* Monetization */}
+                                    {isDefaultLocale && (
+                                        <div className="space-y-6 pt-8 border-t border-white/5">
+                                            <div className="flex items-center gap-3">
+                                                <ShieldCheck size={18} className="text-hama-gold" />
+                                                <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-text-primary">Monetization</h4>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                <div className="space-y-4">
+                                                    <label className="block text-[10px] font-black text-text-muted uppercase tracking-widest ml-1">Course Access</label>
+                                                    <div className="flex p-1 bg-white/5 rounded-2xl border border-white/5">
+                                                        <button
+                                                            onClick={() => setCourse({ ...course, isFree: true })}
+                                                            className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${course.isFree ? 'bg-hama-gold text-black' : 'text-text-muted hover:text-white'}`}
+                                                        >
+                                                            Free Access
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setCourse({ ...course, isFree: false })}
+                                                            className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!course.isFree ? 'bg-hama-gold text-black' : 'text-text-muted hover:text-white'}`}
+                                                        >
+                                                            Paid Course
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {!course.isFree && (
+                                                    <div className="space-y-4 animate-in slide-in-from-top-4 duration-500">
+                                                        <label className="block text-[10px] font-black text-text-muted uppercase tracking-widest ml-1">Price (NGN)</label>
+                                                        <div className="relative group">
+                                                            <span className="absolute left-6 top-1/2 -translate-y-1/2 text-hama-gold font-black">₦</span>
+                                                            <input
+                                                                type="number"
+                                                                value={course.price || ''}
+                                                                onChange={(e) => setCourse({ ...course, price: Number(e.target.value) })}
+                                                                className={`w-full pl-12 pr-6 py-4 rounded-2xl text-[14px] font-black ${inputBaseClass}`}
+                                                                placeholder="5000"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

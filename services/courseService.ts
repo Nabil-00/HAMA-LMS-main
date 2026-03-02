@@ -29,7 +29,9 @@ export const getCourses = async (): Promise<Course[]> => {
         auditLog: course.auditLog || [],
         supportedLocales: course.supported_locales || ['en-US'],
         defaultLocale: course.default_locale || 'en-US',
-        localizations: course.localizations || {}
+        localizations: course.localizations || {},
+        price: course.price || 0,
+        isFree: course.is_free ?? true
     })) as Course[];
 };
 
@@ -50,6 +52,8 @@ export const saveCourse = async (course: Course): Promise<Course> => {
             modules: course.modules, // Ensure modules are saved as JSONB
             versions: course.versions,
             auditLog: course.auditLog,
+            price: course.price,
+            is_free: course.isFree,
             last_modified: new Date().toISOString()
         })
         .select()

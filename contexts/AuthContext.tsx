@@ -5,6 +5,8 @@ import { supabase } from '../supabaseClient';
 interface AuthContextType {
   user: User | null;
   login: (email: string, password?: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
   hasRole: (allowedRoles: UserRole[]) => boolean;
@@ -36,9 +38,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     // Listen for changes on auth state (logged in, signed out, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, session: any) => {
       if (session) {
-        fetchProfile(session.user.id);
+        // Optimistic update: use session metadata if profile isn't loaded yet
+        if (!user || user.id !== session.user.id) {
+          const metadata = session.user.user_metadata;
+          setUser({
+            id: session.user.id,
+            email: session.user.email,
+            name: metadata.full_name || metadata.name || session.user.email?.split('@')[0],
+            role: 'Student', // Default role until profile is fetched
+            avatarUrl: metadata.avatar_url || metadata.picture,
+            status: 'Active',
+            joinedAt: new Date().toISOString()
+          } as User);
+          fetchProfile(session.user.id);
+        }
       } else {
         setUser(null);
         setLoading(false);
@@ -87,6 +102,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signUp = async (email: string, password: string, name: string) => {
+    setLoading(true);
+    try {
+      const { data: { user: authUser }, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          },
+        },
+      });
+
+      if (error) throw error;
+      if (authUser) {
+        // Profile is created by DB trigger, we just wait a bit or fetch it
+        await fetchProfile(authUser.id);
+      }
+    } catch (err) {
+      setLoading(false);
+      throw err;
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (error) throw error;
+    } catch (err) {
+      setLoading(false);
+      throw err;
+    }
+  };
+
   const logout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) console.error('Error logging out:', error);
@@ -98,7 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, hasRole, loading }}>
+    <AuthContext.Provider value={{ user, login, signUp, signInWithGoogle, logout, isAuthenticated: !!user, hasRole, loading }}>
       {children}
     </AuthContext.Provider>
   );

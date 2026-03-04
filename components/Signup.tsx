@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight, AlertCircle, ShieldCheck, Globe } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
 import { useToast } from './Toast';
 import { useAuth } from '../contexts/AuthContext';
 
 const Signup = () => {
     const navigate = useNavigate();
     const { addToast } = useToast();
-    const { user, isAuthenticated, signUp, signInWithGoogle } = useAuth();
+    const { user, isAuthenticated, signUp } = useAuth();
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -28,151 +29,216 @@ const Signup = () => {
         setIsLoading(true);
 
         try {
-            await signUp(email, password, name);
-            addToast('Account created successfully!', 'success');
-            navigate('/');
+            const result = await signUp(email, password, name);
+            
+            if (result.requiresEmailConfirmation) {
+                addToast('An aika imel. Duba inbox ka don tabbatarwa.', 'success');
+                navigate('/login');
+            } else {
+                addToast('Barka da zuwa!', 'success');
+                navigate('/');
+            }
         } catch (e: any) {
-            setError(e.message || 'Signup failed. Please try again.');
+            setError(e.message || 'Rijiya ta ki yi. Sake gwadawa.');
+        } finally {
             setIsLoading(false);
         }
     };
 
+    const itemVariants = {
+        hidden: { opacity: 0, y: 30, scale: 0.95 },
+        visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
+    };
+
     return (
-        <div className="min-h-screen w-full flex bg-bg-primary text-text-primary selection:bg-hama-gold selection:text-black relative overflow-hidden">
+        <div className="min-h-screen w-full flex bg-[#1A1A1A] text-[#F5F5DC] selection:bg-[#D4AF37] selection:text-[#1A1A1A] overflow-hidden relative">
+            {/* Background Effects */}
             <div className="noise" />
-            <div className="aura" style={{ top: '-10%', right: '-10%' }} />
-            <div className="aura" style={{ bottom: '-10%', left: '-10%', background: 'radial-gradient(circle, rgba(242, 201, 76, 0.05) 0%, transparent 70%)' }} />
+            <motion.div
+                animate={{ scale: [1, 1.4, 1], rotate: [0, 90, 0] }}
+                transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute top-[15%] -left-32 w-[30rem] h-[30rem] bg-[#046307] blur-[180px] rounded-full opacity-20 pointer-events-none"
+            />
+            <motion.div
+                animate={{ scale: [1, 1.2, 1], rotate: [0, -45, 0], y: [0, 100, 0] }}
+                transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute bottom-[20%] -right-32 w-[35rem] h-[35rem] bg-[#D4AF37] blur-[200px] rounded-full opacity-10 pointer-events-none"
+            />
 
             {/* Left Side - Visual */}
-            <div className="hidden lg:flex w-1/2 relative overflow-hidden items-center justify-center p-20 border-r border-hama-gold/10">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-10 grayscale"></div>
-                <div className="absolute inset-0 bg-gradient-to-br from-bg-primary via-bg-primary/95 to-hama-gold/5"></div>
+            <motion.div 
+                initial="hidden"
+                animate="visible"
+                variants={itemVariants}
+                className="hidden lg:flex w-1/2 relative overflow-hidden items-center justify-center p-20 border-r border-[#D4AF37]/10"
+            >
+                <div 
+                    className="absolute inset-0 bg-cover bg-center opacity-30 grayscale contrast-[1.2] brightness-[0.6]"
+                    style={{ backgroundImage: "url('https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?q=80&w=1920&auto=format&fit=crop')" }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-[#1A1A1A]/20 via-[#1A1A1A]/60 to-[#1A1A1A]" />
+                <div className="absolute inset-0 bg-[#046307]/20 mix-blend-overlay" />
 
                 <div className="relative z-10 max-w-xl text-center">
-                    <h1 className="text-6xl font-bold text-text-primary mb-8 tracking-tight leading-tight serif">
-                        Join the <span className="text-hama-gold">HAMA</span> Movement.
-                    </h1>
-                    <p className="text-text-secondary text-xl leading-relaxed mb-12 font-light">
-                        Start your journey in Saharan sound and institutional excellence.
-                    </p>
+                    <motion.div variants={itemVariants} className="flex items-center justify-center gap-6 mb-12">
+                        <div className="h-[1px] w-12 bg-[#D4AF37]/50"></div>
+                        <span className="text-[#D4AF37] font-black tracking-[0.8em] text-[11px] uppercase">
+                            Shiga cikin Makarantar
+                        </span>
+                        <div className="h-[1px] w-12 bg-[#D4AF37]/50"></div>
+                    </motion.div>
+
+                    <motion.h1 variants={itemVariants} className="text-5xl font-black text-[#F5F5DC] mb-8 tracking-tight leading-tight serif">
+                        Zama <br />
+                        <span className="bg-gradient-to-r from-[#D4AF37] via-[#F5F5DC] to-[#D4AF37] bg-clip-text text-transparent bg-[length:200%_auto] animate-shimmer-fast">
+                            Malami
+                        </span>
+                    </motion.h1>
+
+                    <motion.p variants={itemVariants} className="text-lg text-[#F5F5DC]/60 max-w-md mx-auto leading-[1.3]">
+                        Koyi yin kiɗa na gargajiya tare da malaman kiɗa.
+                    </motion.p>
+
+                    <motion.div variants={itemVariants} className="flex justify-center gap-16 mt-16">
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="w-16 h-16 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20">
+                                <ShieldCheck className="text-[#D4AF37]" size={28} />
+                            </div>
+                            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-[#666666]">Tabbatacce</span>
+                        </div>
+                    </motion.div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Right Side - Signup Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-24 relative z-20">
-                <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-                    <div className="text-center space-y-4">
-                        <div className="relative inline-block">
-                            <div className="absolute inset-0 bg-hama-gold/20 blur-3xl rounded-full" />
-                            <img src="/hama_logo.png" alt="HAMA Academy" className="w-20 h-20 object-contain mx-auto relative z-10 drop-shadow-[0_0_20px_rgba(242,201,76,0.3)]" />
-                        </div>
+            <motion.div 
+                initial="hidden"
+                animate="visible"
+                variants={itemVariants}
+                className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-24 relative z-20"
+            >
+                <div className="w-full max-w-md space-y-10">
+                    <div className="text-center space-y-6">
+                        <motion.div whileHover={{ scale: 1.05 }} className="relative inline-block cursor-pointer">
+                            <div className="absolute -inset-6 bg-gradient-to-tr from-[#046307] to-[#D4AF37] rounded-3xl opacity-20 blur-[60px]" />
+                            <div className="w-20 h-20 rounded-3xl bg-[#D4AF37] flex items-center justify-center relative shadow-[0_20px_60px_rgba(212,175,55,0.4)]">
+                                <span className="font-black text-4xl text-[#1A1A1A] tracking-tighter">H</span>
+                            </div>
+                        </motion.div>
+                        
                         <div className="space-y-2">
-                            <h1 className="text-3xl font-black text-text-primary uppercase tracking-[0.3em] font-sans">Create Account</h1>
-                            <p className="text-xs text-text-muted font-bold uppercase tracking-[0.4em]">Become a member of HAMA.</p>
+                            <h1 className="text-2xl font-black text-[#F5F5DC] uppercase tracking-[0.3em]">Yi Rijista</h1>
+                            <p className="text-[10px] text-[#666666] font-black uppercase tracking-[0.3em]">
+                                Shiga cikin makarantar
+                            </p>
                         </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <button
-                            onClick={() => signInWithGoogle()}
-                            className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center gap-3 hover:bg-white/10 transition-all text-xs font-black uppercase tracking-widest group"
-                        >
-                            <Globe className="text-hama-gold group-hover:rotate-12 transition-transform" size={18} />
-                            Continue with Google
-                        </button>
+                    <form onSubmit={handleSignup} className="space-y-6">
+                        <div className="space-y-5">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-[#666666] uppercase tracking-[0.3em] ml-1">Suna</label>
+                                <div className="relative group">
+                                    <User className="absolute left-5 top-1/2 -translate-y-1/2 text-[#D4AF37]/40 group-focus-within:text-[#D4AF37] transition-colors" size={18} />
+                                    <input
+                                        type="text"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        className="w-full pl-14 pr-6 py-4 bg-[#F5F5DC]/5 border border-[#D4AF37]/10 rounded-2xl focus:border-[#D4AF37] outline-none text-[#F5F5DC] transition-all placeholder:text-[#666666]/30 text-sm font-medium"
+                                        placeholder="Suna"
+                                        required
+                                    />
+                                </div>
+                            </div>
 
-                        <div className="relative py-4">
-                            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
-                            <div className="relative flex justify-center text-[10px] uppercase tracking-[0.3em] font-black text-text-muted">
-                                <span className="bg-bg-primary px-4">Or use email</span>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-[#666666] uppercase tracking-[0.3em] ml-1">Imel</label>
+                                <div className="relative group">
+                                    <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-[#D4AF37]/40 group-focus-within:text-[#D4AF37] transition-colors" size={18} />
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="w-full pl-14 pr-6 py-4 bg-[#F5F5DC]/5 border border-[#D4AF37]/10 rounded-2xl focus:border-[#D4AF37] outline-none text-[#F5F5DC] transition-all placeholder:text-[#666666]/30 text-sm font-medium"
+                                        placeholder="artist@hama.com"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-[#666666] uppercase tracking-[0.3em] ml-1">Kalmar sirri</label>
+                                <div className="relative group">
+                                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-[#D4AF37]/40 group-focus-within:text-[#D4AF37] transition-colors" size={18} />
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="w-full pl-14 pr-20 py-4 bg-[#F5F5DC]/5 border border-[#D4AF37]/10 rounded-2xl focus:border-[#D4AF37] outline-none text-[#F5F5DC] transition-all placeholder:text-[#666666]/30 text-sm font-medium"
+                                        placeholder="••••••••"
+                                        required
+                                        minLength={6}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-5 top-1/2 -translate-y-1/2 text-[#D4AF37]/40 hover:text-[#D4AF37] transition-all"
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
-                        <form onSubmit={handleSignup} className="space-y-6">
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-text-muted uppercase tracking-[0.3em] ml-1">Full Name</label>
-                                    <div className="relative group">
-                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-hama-gold transition-colors" size={18} />
-                                        <input
-                                            type="text"
-                                            value={name}
-                                            onChange={(e) => setName(e.target.value)}
-                                            className="w-full pl-12 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl focus:border-hama-gold outline-none text-text-primary transition-all text-sm font-medium"
-                                            placeholder="Ahmed Moussa"
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-text-muted uppercase tracking-[0.3em] ml-1">Email Address</label>
-                                    <div className="relative group">
-                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-hama-gold transition-colors" size={18} />
-                                        <input
-                                            type="email"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            className="w-full pl-12 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl focus:border-hama-gold outline-none text-text-primary transition-all text-sm font-medium"
-                                            placeholder="artist@hama.academy"
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-text-muted uppercase tracking-[0.3em] ml-1">Password</label>
-                                    <div className="relative group">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-hama-gold transition-colors" size={18} />
-                                        <input
-                                            type={showPassword ? "text" : "password"}
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            className="w-full pl-12 pr-14 py-4 bg-white/5 border border-white/10 rounded-2xl focus:border-hama-gold outline-none text-text-primary transition-all text-sm font-medium"
-                                            placeholder="••••••••"
-                                            required
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-hama-gold transition-all"
-                                        >
-                                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {error && (
-                                <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-black uppercase tracking-widest rounded-2xl">
-                                    <AlertCircle size={16} />
-                                    {error}
-                                </div>
-                            )}
-
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="w-full py-5 bg-hama-gold text-white font-black text-xs uppercase tracking-[0.4em] rounded-2xl shadow-xl shadow-hama-gold/10 hover:shadow-hama-gold/40 hover:bg-[#FADC7A] hover:text-black transition-all flex items-center justify-center gap-3 disabled:opacity-50 group relative overflow-hidden pulse-glow"
+                        {error && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="flex items-center gap-3 p-4 bg-red-900/20 border border-red-500/20 text-red-400 text-[10px] font-black uppercase tracking-widest rounded-2xl"
                             >
-                                {isLoading ? (
-                                    <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                                ) : (
-                                    <span className="relative z-10 flex items-center gap-3">
-                                        Join Academy
-                                        <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform duration-300" />
-                                    </span>
-                                )}
-                            </button>
-                        </form>
+                                <AlertCircle size={16} />
+                                {error}
+                            </motion.div>
+                        )}
 
-                        <p className="text-center text-xs text-text-muted font-bold tracking-widest uppercase mt-8">
-                            Already a member?{' '}
-                            <Link to="/login" className="text-hama-gold hover:underline transition-all">Sign In</Link>
+                        <motion.button
+                            type="submit"
+                            disabled={isLoading}
+                            whileHover={{ scale: 1.02, boxShadow: "0 25px 50px rgba(212,175,55,0.4)" }}
+                            whileTap={{ scale: 0.98 }}
+                            className="w-full py-5 bg-[#D4AF37] text-[#1A1A1A] font-black text-[11px] uppercase tracking-[0.4em] rounded-2xl shadow-[0_20px_60px_rgba(212,175,55,0.3)] transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isLoading ? (
+                                <div className="w-5 h-5 border-2 border-[#1A1A1A]/30 border-t-[#1A1A1A] rounded-full animate-spin" />
+                            ) : (
+                                <>
+                                    Yi Rijista
+                                    <ArrowRight size={18} />
+                                </>
+                            )}
+                        </motion.button>
+                    </form>
+
+                    <div className="pt-4 text-center">
+                        <p className="text-[10px] text-[#666666] font-black uppercase tracking-[0.2em]">
+                            Ka rigaya ka Yi rijista?{' '}
+                            <Link to="/login" className="text-[#D4AF37] hover:underline">Shiga</Link>
                         </p>
                     </div>
                 </div>
-            </div>
+            </motion.div>
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                @keyframes shimmer-fast {
+                    0% { background-position: -200% center; }
+                    100% { background-position: 200% center; }
+                }
+                .animate-shimmer-fast {
+                    animation: shimmer-fast 3.5s linear infinite;
+                }
+                `
+            }} />
         </div>
     );
 };

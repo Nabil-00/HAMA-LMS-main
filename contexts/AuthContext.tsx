@@ -5,7 +5,7 @@ import { supabase } from '../supabaseClient';
 interface AuthContextType {
   user: User | null;
   login: (email: string, password?: string) => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string) => Promise<{ requiresEmailConfirmation: boolean }>;
   signInWithGoogle: () => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -31,6 +31,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check active sessions and sets the user
     supabase.auth.getSession().then(({ data: { session } }: any) => {
       if (session) {
+        // Create user from session metadata immediately
+        setUser(createUserFromSession(session.user));
         fetchProfile(session.user.id);
       } else {
         setLoading(false);
@@ -40,20 +42,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Listen for changes on auth state (logged in, signed out, etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, session: any) => {
       if (session) {
-        // Optimistic update: use session metadata if profile isn't loaded yet
-        if (!user || user.id !== session.user.id) {
-          const metadata = session.user.user_metadata;
-          setUser({
-            id: session.user.id,
-            email: session.user.email,
-            name: metadata.full_name || metadata.name || session.user.email?.split('@')[0],
-            role: 'Student', // Default role until profile is fetched
-            avatarUrl: metadata.avatar_url || metadata.picture,
-            status: 'Active',
-            joinedAt: new Date().toISOString()
-          } as User);
-          fetchProfile(session.user.id);
-        }
+        // Always set user from session metadata first (optimistic update)
+        setUser(createUserFromSession(session.user));
+        fetchProfile(session.user.id);
       } else {
         setUser(null);
         setLoading(false);
@@ -71,7 +62,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Profile doesn't exist yet - keep the session-based user
+        console.log('Profile not found, using session metadata');
+        setLoading(false);
+        return;
+      }
       if (data) {
         setUser(data as User);
       }
@@ -82,19 +78,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const createUserFromSession = (sessionUser: any) => {
+    const metadata = sessionUser.user_metadata || {};
+    return {
+      id: sessionUser.id,
+      email: sessionUser.email,
+      name: metadata.full_name || metadata.name || sessionUser.email?.split('@')[0] || 'User',
+      role: 'Student' as UserRole,
+      avatarUrl: metadata.avatar_url || metadata.picture || '',
+      status: 'Active' as const,
+      joinedAt: new Date().toISOString()
+    };
+  };
+
   const login = async (email: string, password?: string) => {
     if (!password) throw new Error("Password is required");
 
     setLoading(true);
     try {
-      const { data: { user: authUser }, error } = await supabase.auth.signInWithPassword({
+      const { data: { session }, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
-      if (authUser) {
-        await fetchProfile(authUser.id);
+      if (session) {
+        // Set user from session first (optimistic update)
+        setUser(createUserFromSession(session.user));
+        await fetchProfile(session.user.id);
       }
     } catch (err) {
       setLoading(false);
@@ -102,25 +113,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = async (email: string, password: string, name: string): Promise<{ requiresEmailConfirmation: boolean }> => {
     setLoading(true);
     try {
-      const { data: { user: authUser }, error } = await supabase.auth.signUp({
+      const redirectUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: name,
           },
+          emailRedirectTo: redirectUrl,
         },
       });
 
       if (error) throw error;
-      if (authUser) {
-        // Profile is created by DB trigger, we just wait a bit or fetch it
-        await fetchProfile(authUser.id);
+
+      // Check if email confirmation is required
+      if (data.user && !data.session) {
+        setLoading(false);
+        return { requiresEmailConfirmation: true };
       }
-    } catch (err) {
+
+      // If no confirmation required (emailConfirm disabled in Supabase), fetch profile
+      if (data.session) {
+        await fetchProfile(data.user!.id);
+      }
+      
+      return { requiresEmailConfirmation: false };
+    } catch (err: any) {
       setLoading(false);
       throw err;
     }
@@ -129,16 +151,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithGoogle = async () => {
     setLoading(true);
     try {
+      const redirectUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
+      console.log('Google OAuth redirect URL:', redirectUrl);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: redirectUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         }
       });
       if (error) throw error;
-    } catch (err) {
+    } catch (err: any) {
       setLoading(false);
-      throw err;
+      console.error('Google sign-in error:', err);
+      throw new Error(err.message || 'Failed to sign in with Google. Please check Supabase OAuth configuration.');
     }
   };
 

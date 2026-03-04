@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, Outlet, useParams } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import CourseBuilder from './components/CourseBuilder';
@@ -7,9 +7,25 @@ import CourseList from './components/CourseList';
 import UserManagement from './components/UserManagement';
 import Login from './components/Login';
 import Signup from './components/Signup';
+import QuizPlayer from './components/QuizPlayer';
+import QuizManagement from './components/QuizManagement';
+import CertificateVerification from './components/CertificateVerification';
 import { ToastProvider, useToast } from './components/Toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { UserRole } from './types';
+
+const QuizPlayerWrapper: React.FC = () => {
+  const { quizId } = useParams<{ quizId: string }>();
+  const courseId = new URLSearchParams(window.location.search).get('courseId') || '';
+  if (!quizId) return <Navigate to="/" replace />;
+  return <QuizPlayer quizId={quizId} courseId={courseId} />;
+};
+
+const QuizManagementWrapper: React.FC = () => {
+  const { courseId } = useParams<{ courseId: string }>();
+  if (!courseId) return <Navigate to="/" replace />;
+  return <QuizManagement courseId={courseId} courseTitle="Course" courseDescription="" />;
+};
 
 // Security Enforcer Component
 const ProtectedRoute = ({ allowedRoles }: { allowedRoles: UserRole[] }) => {
@@ -72,7 +88,12 @@ const App: React.FC = () => {
               <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
                 <Route path="/users" element={<UserManagement />} />
                 <Route path="/settings" element={<div className="p-10 text-center text-gray-500">System Settings (Admin Only)</div>} />
+                <Route path="/quiz-management/:courseId" element={<QuizManagementWrapper />} />
               </Route>
+
+              {/* PUBLIC ROUTES */}
+              <Route path="/verify/:code" element={<CertificateVerification />} />
+              <Route path="/quiz/:quizId" element={<QuizPlayerWrapper />} />
 
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />

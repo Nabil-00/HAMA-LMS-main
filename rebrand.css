@@ -1,0 +1,77 @@
+/* ==========================================================================
+   HAMA LMS REBRAND - Alaport Design DNA
+   ========================================================================== */
+
+/* Base Colors */
+.bg-bg-primary { background-color: #1A1A1A !important; }
+.bg-bg-secondary { background-color: #0D0D0D !important; }
+.bg-black { background-color: #1A1A1A !important; }
+
+/* Gold Accent */
+.text-hama-gold { color: #D4AF37 !important; }
+.bg-hama-gold { background-color: #D4AF37 !important; color: #1A1A1A !important; }
+.border-hama-gold { border-color: #D4AF37 !important; }
+
+/* Emerald Accent */
+.text-emerald-400, .text-green-500 { color: #046307 !important; }
+.bg-emerald-500, .bg-green-500 { background-color: #046307 !important; }
+.border-emerald-500 { border-color: #046307 !important; }
+
+/* Text Colors */
+.text-text-primary, .text-white { color: #F5F5DC !important; }
+.text-text-secondary, .text-gray-300 { color: #A0A0A0 !important; }
+.text-text-muted, .text-gray-500 { color: #666666 !important; }
+
+/* Input Fields */
+input, textarea, select {
+  background-color: rgba(212, 175, 55, 0.05) !important;
+  border-color: rgba(212, 175, 55, 0.15) !important;
+  color: #F5F5DC !important;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: #D4AF37 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2) !important;
+}
+
+/* Glass Cards */
+.glass, .bento-card {
+  background: rgba(212, 175, 55, 0.05) !important;
+  backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(212, 175, 55, 0.15) !important;
+}
+
+.bento-card:hover {
+  border-color: rgba(212, 175, 55, 0.25) !important;
+  background: rgba(212, 175, 55, 0.08) !important;
+}
+
+/* Buttons */
+button.bg-hama-gold, .bg-hama-gold:hover {
+  background-color: #D4AF37 !important;
+  color: #1A1A1A !important;
+  box-shadow: 0 20px 60px rgba(212, 175, 55, 0.4) !important;
+}
+
+/* Hover States */
+.hover\:bg-hama-gold:hover { background-color: #D4AF37 !important; }
+.hover\:text-hama-gold:hover { color: #D4AF37 !important; }
+.hover\:border-hama-gold:hover { border-color: #D4AF37 !important; }
+
+/* Links */
+a { color: #D4AF37 !important; }
+a:hover { color: #E5C76B !important; }
+
+/* Progress Bars */
+.bg-hama-gold { background-color: #D4AF37 !important; }
+.bg-hama-success { background-color: #046307 !important; }
+
+/* Shadows */
+.shadow-lg, .shadow-xl, .shadow-2xl {
+  --tw-shadow-color: rgba(212, 175, 55, 0.15) !important;
+}
+
+/* Gradients */
+.from-yellow-500 { --tw-gradient-from: #D4AF37 !important; }
+.to-yellow-500 { --tw-gradient-to: #B8962E !important; }

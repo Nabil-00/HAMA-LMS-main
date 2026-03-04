@@ -43,7 +43,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon: Icon, o
         <p className="text-xs md:text-[10px] font-black text-text-muted uppercase tracking-[0.2em] md:tracking-[0.3em] truncate">{title}</p>
         {onClick && (
           <span className="text-[10px] md:text-[8px] font-black text-hama-gold bg-hama-gold/10 px-1 md:px-1.5 py-0.5 rounded border border-hama-gold/20 uppercase tracking-widest animate-pulse shrink-0">
-            Preview
+            Duba
           </span>
         )}
       </div>
@@ -121,35 +121,35 @@ const Dashboard: React.FC = () => {
     <div className="space-y-12">
       <div className="mb-12">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-hama-gold/5 border border-hama-gold/10 text-hama-gold text-xs font-bold uppercase tracking-[0.3em] mb-4">
-          Welcome Back
+          Barka da komowa
         </div>
         <h1 className="text-4xl md:text-5xl font-bold serif mb-4 text-text-primary">
-          {user?.role === 'Admin' ? 'Admin Area' : user?.role === 'Teacher' ? 'Teacher Dashboard' : 'My Dashboard'}
+          {user?.role === 'Admin' ? 'Admin Area' : user?.role === 'Teacher' ? 'Dashboard' : 'Dashboard'}
         </h1>
-        <p className="text-text-secondary mt-4 max-w-lg leading-relaxed font-light">Track your progress and courses.</p>
+        <p className="text-text-secondary mt-4 max-w-lg leading-relaxed font-light">Duba ci gaban ka da darussa.</p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {user?.role === 'Student' ? (
           <>
-            <StatCard title="My Courses" value={recentActivity.length} change="Live" icon={BookOpen} />
-            <StatCard title="Academy Status" value="Online" change="Verified" icon={CheckSquare} />
+            <StatCard title="Darussa Na" value={recentActivity.length} change="Aiki" icon={BookOpen} />
+            <StatCard title="Mataki" value="Online" change="Tabbatacce" icon={CheckSquare} />
             <StatCard
-              title="Certificates"
+              title="Takardu"
               value={recentActivity.filter(a => a.status === 'Completed').length}
-              change="Verified"
+              change="Tabbatacce"
               icon={GraduationCap}
               onClick={() => setShowCertPreview(true)}
             />
-            <StatCard title="Enrollment Status" value="Active" change="Live" icon={Clock} />
+            <StatCard title="Rijista" value="Aiki" change="Aiki" icon={Clock} />
           </>
         ) : (
           <>
-            <StatCard title={user?.role === 'Admin' ? "Total Artists" : "My Students"} value={stats.userCount} change="+5%" icon={Users} />
-            <StatCard title="Active Courses" value={stats.courseCount} change="+2" icon={BookOpen} />
-            <StatCard title="Completions" value={stats.rewardCount} change="+12%" icon={GraduationCap} onClick={() => setShowCertPreview(true)} />
-            <StatCard title="Weekly Usage" value={stats.activeFlow} change="+4%" icon={Clock} />
+            <StatCard title={user?.role === 'Admin' ? "Matasan Jimlar" : "Matalikai Na"} value={stats.userCount} change="+5%" icon={Users} />
+            <StatCard title="Darussa Aiki" value={stats.courseCount} change="+2" icon={BookOpen} />
+            <StatCard title="Kammalawa" value={stats.rewardCount} change="+12%" icon={GraduationCap} onClick={() => setShowCertPreview(true)} />
+            <StatCard title="Aiki na Mako" value={stats.activeFlow} change="+4%" icon={Clock} />
           </>
         )}
       </div>
@@ -158,7 +158,7 @@ const Dashboard: React.FC = () => {
       {user?.role !== 'Student' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 bento-card p-6 md:p-8">
-            <h3 className="text-lg md:text-xl font-bold serif mb-6 md:mb-8 text-hama-gold">Enrollments</h3>
+            <h3 className="text-lg md:text-xl font-bold serif mb-6 md:mb-8 text-hama-gold">Rijista</h3>
             <div className="h-64 md:h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={data}>
@@ -182,7 +182,7 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="bento-card p-6 md:p-8">
-            <h3 className="text-lg md:text-xl font-bold serif mb-6 md:mb-8 text-hama-gold">Content Types</h3>
+            <h3 className="text-lg md:text-xl font-bold serif mb-6 md:mb-8 text-hama-gold">Nau'o'in Kayyade</h3>
             <div className="h-64 md:h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={engagementData} layout="vertical">
@@ -201,9 +201,9 @@ const Dashboard: React.FC = () => {
       <div className="bento-card overflow-hidden">
         <div className="px-8 py-6 border-b border-white/5 flex justify-between items-center relative z-10">
           <h3 className="text-xl font-bold serif text-text-primary">
-            {user?.role === 'Student' ? 'My Recent Progress' : 'Recent Activity'}
+            {user?.role === 'Student' ? 'Ci Gaba Na' : 'Ayyuka'}
           </h3>
-          <button className="text-xs font-black uppercase tracking-[0.2em] text-hama-gold/60 hover:text-hama-gold transition-colors">View All</button>
+          <button className="text-xs font-black uppercase tracking-[0.2em] text-hama-gold/60 hover:text-hama-gold transition-colors">Duba Duk</button>
         </div>
         <div className="relative z-10">
           {/* Desktop Table */}
@@ -211,10 +211,10 @@ const Dashboard: React.FC = () => {
             <table className="w-full text-left">
               <thead className="text-xs font-black uppercase tracking-[0.2em] text-white/20">
                 <tr className="border-b border-white/5">
-                  {user?.role !== 'Student' && <th className="px-8 py-4">Student</th>}
-                  <th className="px-8 py-4">Module</th>
-                  <th className="px-8 py-4">Date</th>
-                  <th className="px-8 py-4">Status</th>
+                  {user?.role !== 'Student' && <th className="px-8 py-4">Malami</th>}
+                  <th className="px-8 py-4">Darussa</th>
+                  <th className="px-8 py-4">Kwanan wata</th>
+                  <th className="px-8 py-4">Mataki</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -230,7 +230,7 @@ const Dashboard: React.FC = () => {
                           onClick={() => setShowCertPreview(true)}
                           className="opacity-0 group-hover:opacity-100 flex items-center gap-2 text-xs font-black text-hama-gold uppercase tracking-widest transition-all hover:underline"
                         >
-                          <Eye size={12} /> View Cert
+                          <Eye size={12} /> Duba Takarda
                         </button>
                       )}
                     </td>
@@ -247,7 +247,7 @@ const Dashboard: React.FC = () => {
                 <div className="flex justify-between items-start">
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-text-primary truncate">{activity.moduleName}</p>
-                    {user?.role !== 'Student' && <p className="text-xs text-hama-gold mt-1">Student: {activity.userName}</p>}
+                    {user?.role !== 'Student' && <p className="text-xs text-hama-gold mt-1">Malami: {activity.userName}</p>}
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <span className="px-2 py-0.5 rounded-full bg-white/5 text-[10px] font-black uppercase tracking-widest text-text-muted shrink-0">{activity.status}</span>
@@ -256,7 +256,7 @@ const Dashboard: React.FC = () => {
                         onClick={() => setShowCertPreview(true)}
                         className="text-[10px] font-black text-hama-gold uppercase tracking-widest flex items-center gap-1"
                       >
-                        <Eye size={10} /> Preview
+                        <Eye size={10} /> Duba
                       </button>
                     )}
                   </div>

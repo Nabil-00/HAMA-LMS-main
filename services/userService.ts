@@ -155,3 +155,109 @@ export const bulkEnroll = async (userIds: string[], courseId: string, adminId: s
   if (error) throw error;
   return data ? data.length : userIds.length;
 };
+
+// --- PAYMENTS ---
+
+export interface Payment {
+  id: string;
+  user_id: string;
+  course_id: string;
+  amount: number;
+  currency: string;
+  reference: string;
+  status: 'pending' | 'success' | 'failed' | 'refunded';
+  paystack_response?: any;
+  created_at: string;
+  updated_at: string;
+}
+
+export const createPayment = async (
+  userId: string,
+  courseId: string,
+  amount: number,
+  reference: string
+): Promise<Payment> => {
+  const { data, error } = await supabase
+    .from('payments')
+    .insert({
+      user_id: userId,
+      course_id: courseId,
+      amount,
+      reference,
+      status: 'pending'
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Payment;
+};
+
+export const verifyPayment = async (
+  reference: string,
+  paystackResponse: any
+): Promise<{ payment: Payment; enrollment: Enrollment } | null> => {
+  try {
+    // Update payment status to success
+    const { data: payment, error: paymentError } = await supabase
+      .from('payments')
+      .update({
+        status: 'success',
+        paystack_response: paystackResponse,
+        updated_at: new Date().toISOString()
+      })
+      .eq('reference', reference)
+      .select()
+      .single();
+
+    if (paymentError || !payment) {
+      console.error('Payment update failed:', paymentError);
+      return null;
+    }
+
+    // Create enrollment
+    const { data: enrollment, error: enrollError } = await supabase
+      .from('enrollments')
+      .upsert({
+        user_id: payment.user_id,
+        course_id: payment.course_id,
+        enrolled_by: payment.user_id,
+        status: 'Active',
+        enrolled_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (enrollError) {
+      console.error('Enrollment failed:', enrollError);
+      return null;
+    }
+
+    return { payment, enrollment };
+  } catch (error) {
+    console.error('Verify payment error:', error);
+    return null;
+  }
+};
+
+export const getPaymentByReference = async (reference: string): Promise<Payment | null> => {
+  const { data, error } = await supabase
+    .from('payments')
+    .select('*')
+    .eq('reference', reference)
+    .single();
+
+  if (error) return null;
+  return data as Payment;
+};
+
+export const getUserPayments = async (userId: string): Promise<Payment[]> => {
+  const { data, error } = await supabase
+    .from('payments')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) return [];
+  return data as Payment[];
+};

@@ -117,9 +117,8 @@ export interface Course {
   isFree: boolean;
 
   // Versioning & Compliance
-  currentVersion: string; // e.g. "0.0.1" (Draft) or "1.0.0" (Live)
+  currentVersion: string;
   versions: CourseVersion[];
-  auditLog: AuditLogEntry[];
 }
 
 export type UserRole = 'Admin' | 'Teacher' | 'Student';
@@ -158,4 +157,69 @@ export interface Notification {
   isRead: boolean;
   link?: string;
   createdAt: string;
+}
+
+// Quiz Types
+export type QuizStatus = 'draft' | 'published' | 'archived';
+export type QuestionStatus = 'draft' | 'approved' | 'rejected';
+
+export interface Quiz {
+  id: string;
+  courseId: string;
+  title: string;
+  passPercentage: number;
+  totalQuestions: number;
+  status: QuizStatus;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Question {
+  id: string;
+  quizId: string;
+  questionText: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correctOption: 'a' | 'b' | 'c' | 'd';
+  explanation?: string;
+  status: QuestionStatus;
+  generatedByAi: boolean;
+  orderIndex: number;
+}
+
+export interface QuizAttempt {
+  id: string;
+  userId: string;
+  quizId: string;
+  score: number;
+  passed: boolean;
+  answers: Record<string, string>;
+  attemptedAt: string;
+}
+
+export interface Certificate {
+  id: string;
+  userId: string;
+  courseId: string;
+  issuedAt: string;
+  certificateUrl?: string;
+  uniqueCode: string;
+  quizAttemptId?: string;
+}
+
+// Quiz with Questions (for taking quiz)
+export interface QuizWithQuestions extends Quiz {
+  questions: Question[];
+}
+
+// Certificate Verification
+export interface CertificateVerification {
+  valid: boolean;
+  certificate?: Certificate;
+  userName?: string;
+  courseTitle?: string;
+  message?: string;
 }

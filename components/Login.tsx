@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, ShieldCheck, Globe, UserCog, GraduationCap, School } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, ShieldCheck, Globe } from 'lucide-react';
 import { useToast } from './Toast';
 import { useAuth } from '../contexts/AuthContext';
-import { UserRole } from '../types';
 
 const Login = () => {
    const navigate = useNavigate();
    const { addToast } = useToast();
-   const { user, isAuthenticated, login, signInWithGoogle } = useAuth();
+   const { user, isAuthenticated, login } = useAuth();
 
    const [email, setEmail] = useState('');
    const [password, setPassword] = useState('');
@@ -22,8 +22,6 @@ const Login = () => {
       }
    }, [isAuthenticated, navigate, isLoading]);
 
-
-
    const handleLogin = async (e: React.FormEvent) => {
       e.preventDefault();
       setError('');
@@ -31,161 +29,200 @@ const Login = () => {
 
       try {
          await login(email, password);
-         addToast('Successfully signed in', 'success');
+         addToast('Barka da zuwa', 'success');
          navigate('/');
       } catch (e: any) {
-         setError('Login failed. Check your email or password.');
+         setError('An ki ba da izini. Tabbatar da bayananka.');
          setIsLoading(false);
       }
    };
 
-   return (
-      <div className="min-h-screen w-full flex bg-bg-primary text-text-primary selection:bg-hama-gold selection:text-black relative overflow-hidden">
-         {/* Visual background layers */}
-         <div className="noise" />
-         <div className="aura" style={{ top: '-10%', right: '-10%' }} />
-         <div className="aura" style={{ bottom: '-10%', left: '-10%', background: 'radial-gradient(circle, rgba(242, 201, 76, 0.05) 0%, transparent 70%)' }} />
+   const itemVariants = {
+      hidden: { opacity: 0, y: 30, scale: 0.95 },
+      visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
+   };
 
-         {/* Left Side - Visual / Brand Heritage */}
-         <div className="hidden lg:flex w-1/2 relative overflow-hidden items-center justify-center p-20 border-r border-hama-gold/10">
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-10 grayscale"></div>
-            <div className="absolute inset-0 bg-gradient-to-br from-bg-primary via-bg-primary/95 to-hama-gold/5"></div>
+   return (
+      <div className="min-h-screen w-full flex bg-[#1A1A1A] text-[#F5F5DC] selection:bg-[#D4AF37] selection:text-[#1A1A1A] overflow-hidden relative">
+         {/* Background Effects */}
+         <div className="noise" />
+         <motion.div
+            animate={{ scale: [1, 1.4, 1], rotate: [0, 90, 0] }}
+            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-[15%] -left-32 w-[30rem] h-[30rem] bg-[#046307] blur-[180px] rounded-full opacity-20 pointer-events-none"
+         />
+         <motion.div
+            animate={{ scale: [1, 1.2, 1], rotate: [0, -45, 0], y: [0, 100, 0] }}
+            transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute bottom-[20%] -right-32 w-[35rem] h-[35rem] bg-[#D4AF37] blur-[200px] rounded-full opacity-10 pointer-events-none"
+         />
+
+         {/* Left Side - Visual */}
+         <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={itemVariants}
+            className="hidden lg:flex w-1/2 relative overflow-hidden items-center justify-center p-20 border-r border-[#D4AF37]/10"
+         >
+            <div 
+               className="absolute inset-0 bg-cover bg-center opacity-30 grayscale contrast-[1.2] brightness-[0.6]"
+               style={{ backgroundImage: "url('https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=1920&auto=format&fit=crop')" }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#1A1A1A]/20 via-[#1A1A1A]/60 to-[#1A1A1A]" />
+            <div className="absolute inset-0 bg-[#046307]/20 mix-blend-overlay" />
 
             <div className="relative z-10 max-w-xl">
+               <motion.div variants={itemVariants} className="flex items-center justify-center gap-6 mb-12">
+                  <div className="h-[1px] w-12 bg-[#D4AF37]/50"></div>
+                   <span className="text-[#D4AF37] font-black tracking-[0.8em] text-[11px] uppercase">
+                      HAMA Academy
+                   </span>
+                  <div className="h-[1px] w-12 bg-[#D4AF37]/50"></div>
+               </motion.div>
 
-               <h1 className="text-6xl font-bold text-text-primary mb-8 tracking-tight leading-tight serif">
-                  Learn <span className="text-hama-gold">Hausa Music</span> Production.
-               </h1>
-               <p className="text-text-secondary text-xl leading-relaxed mb-12 font-light">
-                  Learn music production from top artists.
-               </p>
+                <motion.h1 variants={itemVariants} className="text-6xl font-black text-[#F5F5DC] mb-8 tracking-tight leading-tight serif text-center">
+                   Shiga cikin <br />
+                   <span className="bg-gradient-to-r from-[#D4AF37] via-[#F5F5DC] to-[#D4AF37] bg-clip-text text-transparent bg-[length:200%_auto] animate-shimmer-fast">
+                      Gida
+                   </span>
+                </motion.h1>
 
-               <div className="grid grid-cols-2 gap-8">
-                  <div className="flex items-center gap-4 text-text-muted">
-                     <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
-                        <ShieldCheck className="text-hama-gold" size={20} />
-                     </div>
-                     <span className="text-xs font-black uppercase tracking-[0.2em] opacity-50">Verified</span>
-                  </div>
-                  <div className="flex items-center gap-4 text-text-muted">
-                     <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
-                        <Globe className="text-hama-gold" size={20} />
-                     </div>
-                     <span className="text-xs font-black uppercase tracking-[0.2em] opacity-50">Industry Standard</span>
-                  </div>
-               </div>
+                <motion.p variants={itemVariants} className="text-xl text-[#F5F5DC]/60 max-w-lg mx-auto leading-[1.3]">
+                   Koyi yin kiɗa daga malaman kiɗa na Arewa.
+                </motion.p>
+
+                <motion.div variants={itemVariants} className="grid grid-cols-2 gap-8 mt-16">
+                   <div className="flex items-center gap-4 text-[#666666]">
+                      <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20">
+                         <ShieldCheck className="text-[#D4AF37]" size={20} />
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em]">Tabbatacce</span>
+                   </div>
+                   <div className="flex items-center gap-4 text-[#666666]">
+                      <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20">
+                         <Globe className="text-[#D4AF37]" size={20} />
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em]">Duniya</span>
+                   </div>
+                </motion.div>
             </div>
-         </div>
+         </motion.div>
 
          {/* Right Side - Login Form */}
-         <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-24 relative z-20">
-            <div className="w-full max-w-md space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+         <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={itemVariants}
+            className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-24 relative z-20"
+         >
+            <div className="w-full max-w-md space-y-12">
                <div className="text-center space-y-8">
-                  <div className="relative inline-block">
-                     <div className="absolute inset-0 bg-hama-gold/20 blur-3xl rounded-full" />
-                     <img src="/hama_logo.png" alt="HAMA Academy" className="w-24 h-24 md:w-40 md:h-40 object-contain mx-auto relative z-10 drop-shadow-[0_0_30px_rgba(242,201,76,0.3)] animate-pulse duration-[4000ms]" />
-                  </div>
-                  <div className="space-y-3">
-                     <h1 className="text-3xl font-black text-text-primary uppercase tracking-[0.3em] font-sans">Access Portal</h1>
-                     <p className="text-xs text-text-muted font-bold uppercase tracking-[0.4em] max-w-[280px] mx-auto leading-relaxed">
-                        Sign in to continue.
-                     </p>
-                  </div>
+                  <motion.div whileHover={{ scale: 1.05 }} className="relative inline-block cursor-pointer">
+                     <div className="absolute -inset-6 bg-gradient-to-tr from-[#046307] to-[#D4AF37] rounded-3xl opacity-20 blur-[60px]" />
+                     <div className="w-24 h-24 rounded-3xl bg-[#D4AF37] flex items-center justify-center relative shadow-[0_20px_60px_rgba(212,175,55,0.4)]">
+                        <span className="font-black text-5xl text-[#1A1A1A] tracking-tighter">H</span>
+                     </div>
+                  </motion.div>
+                  
+                   <div className="space-y-3">
+                      <h1 className="text-3xl font-black text-[#F5F5DC] uppercase tracking-[0.3em]">Shiga</h1>
+                      <p className="text-xs text-[#666666] font-black uppercase tracking-[0.4em] max-w-[280px] mx-auto">
+                         Shigar da bayananka
+                      </p>
+                   </div>
                </div>
 
-               <div className="space-y-6">
-                  <button
-                     type="button"
-                     onClick={() => signInWithGoogle()}
-                     className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center gap-3 hover:bg-white/10 transition-all text-xs font-black uppercase tracking-widest group"
-                  >
-                     <Globe className="text-hama-gold group-hover:rotate-12 transition-transform" size={18} />
-                     Continue with Google
-                  </button>
+               <form onSubmit={handleLogin} className="space-y-8">
+                  <div className="space-y-6">
+                      <div className="space-y-3">
+                         <label className="text-[10px] font-black text-[#666666] uppercase tracking-[0.3em] ml-1">Imel</label>
+                         <div className="relative group">
+                            <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-[#D4AF37]/40 group-focus-within:text-[#D4AF37] transition-colors" size={18} />
+                            <input
+                               type="email"
+                               value={email}
+                               onChange={(e) => setEmail(e.target.value)}
+                               className="w-full pl-14 pr-6 py-5 bg-[#F5F5DC]/5 border border-[#D4AF37]/10 rounded-2xl focus:border-[#D4AF37] outline-none text-[#F5F5DC] transition-all placeholder:text-[#666666]/30 text-sm font-medium"
+                               placeholder="artist@hama.com"
+                               required
+                            />
+                         </div>
+                      </div>
 
-                  <div className="relative py-2">
-                     <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
-                     <div className="relative flex justify-center text-[10px] uppercase tracking-[0.3em] font-black text-text-muted">
-                        <span className="bg-bg-primary px-4">Or use email</span>
+                      <div className="space-y-3">
+                         <label className="text-[10px] font-black text-[#666666] uppercase tracking-[0.3em] ml-1">Kalmar sirri</label>
+                        <div className="relative group">
+                           <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-[#D4AF37]/40 group-focus-within:text-[#D4AF37] transition-colors" size={18} />
+                           <input
+                              type={showPassword ? "text" : "password"}
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              className="w-full pl-14 pr-20 py-5 bg-[#F5F5DC]/5 border border-[#D4AF37]/10 rounded-2xl focus:border-[#D4AF37] outline-none text-[#F5F5DC] transition-all placeholder:text-[#666666]/30 text-sm font-medium"
+                              placeholder="••••••••"
+                              required
+                           />
+                           <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-5 top-1/2 -translate-y-1/2 text-[#D4AF37]/40 hover:text-[#D4AF37] transition-all"
+                           >
+                              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                           </button>
+                        </div>
                      </div>
                   </div>
 
-                  <form onSubmit={handleLogin} className="space-y-8">
-
-
-
-                     <div className="space-y-6">
-                        <div className="space-y-2">
-                           <label className="text-xs font-black text-text-muted uppercase tracking-[0.3em] ml-1">Email Address</label>
-                           <div className="relative group">
-                              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-hama-gold transition-colors" size={18} />
-                              <input
-                                 type="email"
-                                 value={email}
-                                 onChange={(e) => setEmail(e.target.value)}
-                                 className="w-full pl-12 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl focus:border-hama-gold outline-none text-text-primary transition-all placeholder:text-white/10 text-sm font-medium"
-                                 placeholder="artist@hama.academy"
-                                 required
-                              />
-                           </div>
-                        </div>
-
-                        <div className="space-y-2">
-                           <div className="flex justify-between items-center ml-1">
-                              <label className="text-xs font-black text-text-muted uppercase tracking-[0.3em]">Password</label>
-                           </div>
-                           <div className="relative group">
-                              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-hama-gold transition-colors" size={18} />
-                              <input
-                                 type={showPassword ? "text" : "password"}
-                                 value={password}
-                                 onChange={(e) => setPassword(e.target.value)}
-                                 className="w-full pl-12 pr-14 py-4 bg-white/5 border border-white/10 rounded-2xl focus:border-hama-gold outline-none text-text-primary transition-all placeholder:text-white/10 text-sm font-medium"
-                                 placeholder="••••••••"
-                                 required
-                              />
-                              <button
-                                 type="button"
-                                 onClick={() => setShowPassword(!showPassword)}
-                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-hama-gold transition-all"
-                              >
-                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                              </button>
-                           </div>
-                        </div>
-                     </div>
-
-                     {error && (
-                        <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-black uppercase tracking-widest rounded-2xl animate-in fade-in slide-in-from-top-2">
-                           <AlertCircle size={16} />
-                           {error}
-                        </div>
-                     )}
-
-                     <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full py-5 bg-hama-gold text-white font-black text-xs uppercase tracking-[0.4em] rounded-2xl shadow-xl shadow-hama-gold/10 hover:shadow-hama-gold/40 hover:bg-[#FADC7A] hover:text-black hover:scale-[1.01] transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden pulse-glow"
+                  {error && (
+                     <motion.div 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-center gap-3 p-4 bg-red-900/20 border border-red-500/20 text-red-400 text-[10px] font-black uppercase tracking-widest rounded-2xl"
                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite] pointer-events-none" />
-                        {isLoading ? (
-                           <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                        ) : (
-                           <span className="relative z-10 flex items-center gap-3">
-                              Sign In
-                              <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform duration-300" />
-                           </span>
-                        )}
-                     </button>
-                  </form>
+                        <AlertCircle size={16} />
+                        {error}
+                     </motion.div>
+                  )}
 
-                  <p className="text-center text-xs text-text-muted font-bold tracking-widest uppercase mt-8">
-                     New to the Academy?{' '}
-                     <Link to="/signup" className="text-hama-gold hover:underline transition-all">Create Account</Link>
-                  </p>
-               </div>
+                  <motion.button
+                     type="submit"
+                     disabled={isLoading}
+                     whileHover={{ scale: 1.02, boxShadow: "0 25px 50px rgba(212,175,55,0.4)" }}
+                     whileTap={{ scale: 0.98 }}
+                     className="w-full py-5 bg-[#D4AF37] text-[#1A1A1A] font-black text-[11px] uppercase tracking-[0.4em] rounded-2xl shadow-[0_20px_60px_rgba(212,175,55,0.3)] transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                     {isLoading ? (
+                        <div className="w-5 h-5 border-2 border-[#1A1A1A]/30 border-t-[#1A1A1A] rounded-full animate-spin" />
+                      ) : (
+                         <>
+                            Shiga
+                            <ArrowRight size={18} />
+                         </>
+                      )}
+                  </motion.button>
+               </form>
+
+                <div className="pt-6">
+                   <Link 
+                      to="/signup"
+                      className="block w-full py-5 text-center border border-[#D4AF37]/20 text-[#D4AF37] rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] hover:bg-[#D4AF37]/10 transition-all"
+                   >
+                      Yi Rijista
+                   </Link>
+                </div>
             </div>
-         </div>
+         </motion.div>
+
+         <style dangerouslySetInnerHTML={{
+            __html: `
+            @keyframes shimmer-fast {
+               0% { background-position: -200% center; }
+               100% { background-position: 200% center; }
+            }
+            .animate-shimmer-fast {
+               animation: shimmer-fast 3.5s linear infinite;
+            }
+            `
+         }} />
       </div>
    );
 };

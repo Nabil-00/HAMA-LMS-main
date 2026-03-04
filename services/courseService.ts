@@ -35,7 +35,7 @@ export const getCourses = async (): Promise<Course[]> => {
     })) as Course[];
 };
 
-export const saveCourse = async (course: Course): Promise<Course> => {
+export const saveCourse = async (course: Course, authorId?: string): Promise<Course> => {
     const { data, error } = await supabase
         .from('courses')
         .upsert({
@@ -45,15 +45,15 @@ export const saveCourse = async (course: Course): Promise<Course> => {
             thumbnail_url: course.thumbnailUrl,
             status: course.status as any,
             current_version: course.currentVersion,
-            tags: course.tags, // Added tags
+            tags: course.tags,
             default_locale: course.defaultLocale,
             supported_locales: course.supportedLocales,
             localizations: course.localizations,
-            modules: course.modules, // Ensure modules are saved as JSONB
+            modules: course.modules,
             versions: course.versions,
-            auditLog: course.auditLog,
             price: course.price,
             is_free: course.isFree,
+            author_id: authorId || null,
             last_modified: new Date().toISOString()
         })
         .select()
@@ -79,8 +79,19 @@ export const deleteCourse = async (courseId: string): Promise<void> => {
 };
 
 export const uploadAsset = async (file: File, bucket = 'course-assets'): Promise<string> => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm', 'audio/mpeg', 'audio/wav'];
+    const maxSize = 100 * 1024 * 1024; // 100MB
+    
+    if (!allowedTypes.includes(file.type)) {
+        throw new Error(`File type not allowed. Allowed: ${allowedTypes.join(', ')}`);
+    }
+    
+    if (file.size > maxSize) {
+        throw new Error(`File too large. Max size: 100MB`);
+    }
+    
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
     const filePath = `${fileName}`;
 
     const { error: uploadError } = await supabase.storage

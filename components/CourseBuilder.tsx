@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Course, CourseStatus, Module, Lesson, ContentType, ContentMetadata, LocalizedContent, VersionType, CourseVersion } from '../types';
-import { createVersionSnapshot, restoreVersion, logAction } from '../services/versioningService';
+import { Course, CourseStatus, Module, Lesson, ContentType, ContentMetadata, LocalizedContent } from '../types';
+import { createVersionSnapshot } from '../services/versioningService';
 import { getCourses, saveCourse } from '../services/courseService';
 import {
     Save,
@@ -36,15 +36,16 @@ import {
     X
 } from 'lucide-react';
 import TranslationManager from './TranslationManager';
-import VersionControlPanel from './VersionControlPanel';
 import { VideoEditor, AudioEditor, ImmersiveEditor, ScormEditor, EmbedEditor } from './ContentEditors';
 import { useToast } from './Toast';
 import OrientationPrompt from './OrientationPrompt';
+import { useAuth } from '../contexts/AuthContext';
 
 const RTL_LOCALES = ['ar-SA', 'he-IL', 'fa-IR', 'ur-PK'];
 
 const CourseBuilder: React.FC = () => {
     const { addToast } = useToast();
+    const { user } = useAuth();
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
@@ -54,7 +55,7 @@ const CourseBuilder: React.FC = () => {
         title: 'Untitled Course',
         description: '',
         thumbnailUrl: '',
-        author: 'Admin User',
+        author: user?.name || 'Admin User',
         status: CourseStatus.DRAFT,
         lastModified: new Date().toISOString(),
         modules: [],
@@ -64,7 +65,6 @@ const CourseBuilder: React.FC = () => {
         localizations: {},
         currentVersion: '0.0.1',
         versions: [],
-        auditLog: [],
         price: 0,
         isFree: true
     });
@@ -387,35 +387,25 @@ const CourseBuilder: React.FC = () => {
     };
 
     // --- VERSION CONTROL HANDLERS ---
-    const handlePublish = async (type: VersionType, notes: string) => {
+    const handlePublish = async () => {
         // Ensure ID is stable before publishing
-        let courseToProcess = { ...course };
-        if (courseToProcess.id === 'new') {
-            courseToProcess.id = crypto.randomUUID();
-            setSearchParams({ courseId: courseToProcess.id });
+        let courseToPublish = { ...course };
+        if (courseToPublish.id === 'new') {
+            courseToPublish.id = crypto.randomUUID();
+            setSearchParams({ courseId: courseToPublish.id });
         }
 
-        const newCourseState = createVersionSnapshot(courseToProcess, type, notes, 'Admin User');
+        courseToPublish.status = CourseStatus.PUBLISHED;
+        courseToPublish.lastModified = new Date().toISOString();
 
         try {
-            await saveCourse(newCourseState);
-            setCourse(newCourseState);
-            setShowVersionPanel(false);
-            addToast(`Successfully published version ${newCourseState.currentVersion}.`, 'success');
+            await saveCourse(courseToPublish, user?.id);
+            setCourse(courseToPublish);
+            addToast('Successfully published course!', 'success');
         } catch (e: any) {
             console.error("Failed to save to Supabase", e);
             addToast(`Publish failed: ${e.message}`, 'error');
         }
-    };
-
-    const handleRestore = (version: CourseVersion) => {
-        const restoredCourse = restoreVersion(course, version, 'Admin User');
-        setCourse(restoredCourse);
-        setShowVersionPanel(false);
-        // Reset active selection in case IDs changed or items were removed in old version
-        setActiveModuleId(null);
-        setActiveLessonId(null);
-        addToast(`Restored course to version ${version.version}`, 'info');
     };
 
     const handleSaveDraft = async () => {
@@ -425,11 +415,10 @@ const CourseBuilder: React.FC = () => {
             setSearchParams({ courseId: courseToSave.id });
         }
 
-        courseToSave = logAction(courseToSave, 'SAVE_DRAFT', 'Manual draft save triggered', 'Admin User');
         courseToSave.lastModified = new Date().toISOString();
 
         try {
-            await saveCourse(courseToSave);
+            await saveCourse(courseToSave, user?.id);
             setCourse(courseToSave);
             addToast("Draft saved successfully.", 'success');
         } catch (e: any) {
@@ -922,8 +911,9 @@ const CourseBuilder: React.FC = () => {
                                                             <span className="absolute left-6 top-1/2 -translate-y-1/2 text-hama-gold font-black">₦</span>
                                                             <input
                                                                 type="number"
+                                                                min="0"
                                                                 value={course.price || ''}
-                                                                onChange={(e) => setCourse({ ...course, price: Number(e.target.value) })}
+                                                                onChange={(e) => setCourse({ ...course, price: Math.max(0, Number(e.target.value)) })}
                                                                 className={`w-full pl-12 pr-6 py-4 rounded-2xl text-[14px] font-black ${inputBaseClass}`}
                                                                 placeholder="5000"
                                                             />
@@ -1177,12 +1167,26 @@ const CourseBuilder: React.FC = () => {
             </div>
 
             {showVersionPanel && (
-                <VersionControlPanel
-                    course={course}
-                    onPublish={handlePublish}
-                    onRestore={handleRestore}
-                    onClose={() => setShowVersionPanel(false)}
-                />
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-bg-primary border border-hama-gold/20 rounded-3xl p-8 max-w-md w-full">
+                        <h3 className="text-xl font-bold text-hama-gold mb-4">Publish Course</h3>
+                        <p className="text-text-muted mb-6">Are you sure you want to publish this course? It will be visible to all students.</p>
+                        <div className="flex gap-4">
+                            <button 
+                                onClick={() => setShowVersionPanel(false)}
+                                className="flex-1 py-3 bg-white/10 text-white rounded-xl"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handlePublish}
+                                className="flex-1 py-3 bg-hama-gold text-black font-bold rounded-xl"
+                            >
+                                Publish
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Lesson Editor Slide-over Panel */}

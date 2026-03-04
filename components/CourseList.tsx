@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Course, Module, Lesson, ContentType } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { getCourses } from '../services/courseService';
-import { getUserEnrollments, enrollUser } from '../services/userService';
+import { getUserEnrollments, enrollUser, createPayment, verifyPayment, getPaymentByReference } from '../services/userService';
 import { initializePaystack, loadPaystackScript } from '../services/paystackService';
 import {
   Search,
@@ -373,23 +373,41 @@ const CourseList: React.FC = () => {
       return;
     }
 
+    // Generate a unique reference for this payment
+    const paymentReference = `HAMA_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
     setIsProcessingPayment(true);
+
+    // Create payment record first
+    try {
+      await createPayment(user!.id, course.id, course.price, paymentReference);
+    } catch (e) {
+      console.error("Failed to create payment record:", e);
+      // Continue anyway - we'll verify on callback
+    }
+
     initializePaystack({
       key: publicKey,
       email: user?.email || '',
       amount: course.price,
       metadata: {
         courseId: course.id,
-        userId: user?.id || ''
+        userId: user?.id || '',
+        reference: paymentReference
       },
       onSuccess: async (res) => {
         try {
-          // In production, verify transaction on backend first
-          await enrollUser(user!.id, course.id, 'SYSTEM');
-          await loadEnrollments();
-          setSelectedCourse(course);
+          // Verify payment and enroll
+          const result = await verifyPayment(paymentReference, res);
+          if (result) {
+            await loadEnrollments();
+            setSelectedCourse(course);
+          } else {
+            alert("Payment verification failed. Please contact support.");
+          }
         } catch (e) {
           console.error("Enrollment failed", e);
+          alert("Enrollment failed. Please contact support.");
         } finally {
           setIsProcessingPayment(false);
         }
@@ -410,10 +428,10 @@ const CourseList: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
         <div className="w-full">
           <div className="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-hama-gold/5 border border-hama-gold/10 text-hama-gold text-[9px] font-bold uppercase tracking-[0.3em] mb-3">
-            Academy Catalog
+            Kayayyakin Darussa
           </div>
-          <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold serif text-text-primary">Explore Courses</h1>
-          <p className="text-text-secondary mt-2 md:mt-4 text-sm md:text-base leading-relaxed font-light">Learn music production from top artists.</p>
+          <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold serif text-text-primary">Bincika Darussa</h1>
+          <p className="text-text-secondary mt-2 md:mt-4 text-sm md:text-base leading-relaxed font-light">Koyi yin kiɗa daga malaman kiɗa.</p>
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto">
@@ -421,14 +439,14 @@ const CourseList: React.FC = () => {
             <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-hama-gold transition-colors" size={14} />
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Bincika..."
               value={searchQuery}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
               className="pl-9 md:pl-12 pr-3 md:pr-6 py-2.5 md:py-4 bg-white/5 border border-white/10 rounded-xl md:rounded-2xl text-[10px] md:text-[11px] font-bold uppercase tracking-wider md:tracking-widest text-text-primary focus:ring-1 focus:ring-hama-gold/30 outline-none w-full md:w-56 lg:w-72 placeholder:text-text-muted transition-all"
             />
           </div>
           <button className="flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2.5 md:py-4 bg-white/5 border border-white/10 rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary hover:text-hama-gold hover:bg-white/10 transition-all">
-            <Filter size={14} /> <span className="hidden sm:inline">Filter</span>
+            <Filter size={14} /> <span className="hidden sm:inline">Zaɓe</span>
           </button>
         </div>
       </div>
@@ -438,9 +456,9 @@ const CourseList: React.FC = () => {
           <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8 relative z-10">
             <BookOpen size={40} className="text-white/10" />
           </div>
-          <h3 className="text-2xl font-bold serif text-text-secondary italic relative z-10">No matches found</h3>
+          <h3 className="text-2xl font-bold serif text-text-secondary italic relative z-10">Ba a samo ba</h3>
           <p className="text-text-muted max-w-sm mx-auto mt-4 text-sm font-light relative z-10">
-            No courses found. Try a different search or browse all courses.
+            Ba a sami darussa ba. Gwada bincike ko bincika duk darussa.
           </p>
         </div>
       ) : (
@@ -525,10 +543,10 @@ const CourseList: React.FC = () => {
                       <PlayCircle size={14} className="shrink-0" />
                       <span>
                         {isProcessingPayment
-                          ? 'Processing...'
+                          ? 'Aiki...'
                           : (enrollments.includes(course.id) || course.isFree || hasRole(['Admin', 'Teacher']))
-                            ? 'Start'
-                            : 'Order'
+                            ? 'Fara'
+                            : 'Yi oda'
                         }
                       </span>
                     </button>

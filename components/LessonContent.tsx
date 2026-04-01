@@ -8,7 +8,7 @@ interface LessonContentProps {
 
 const LessonContent: React.FC<LessonContentProps> = ({ htmlContent, title, readingTime }) => {
   return (
-    <div className="min-h-screen bg-[#1A1A1A]">
+    <div className="min-h-[200px] bg-[#1A1A1A]">
       {/* Optional: Reading Time & Progress */}
       {readingTime && (
         <div className="fixed top-16 left-0 right-0 h-0.5 bg-[#1A1A1A] z-40">

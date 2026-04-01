@@ -19,7 +19,7 @@ export const getCourses = async (): Promise<Course[]> => {
 
     return (data as any[]).map(course => ({
         ...course,
-        author: course.profiles?.name || 'Unknown Author',
+        author: course.author || course.profiles?.name || 'Unknown Author',
         thumbnailUrl: course.thumbnail_url,
         currentVersion: course.current_version,
         lastModified: course.last_modified,
@@ -42,6 +42,7 @@ export const saveCourse = async (course: Course, authorId?: string): Promise<Cou
             id: course.id === 'new' ? undefined : course.id,
             title: course.title,
             description: course.description,
+            author: course.author,
             thumbnail_url: course.thumbnailUrl,
             status: course.status as any,
             current_version: course.currentVersion,
@@ -81,15 +82,15 @@ export const deleteCourse = async (courseId: string): Promise<void> => {
 export const uploadAsset = async (file: File, bucket = 'course-assets'): Promise<string> => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm', 'audio/mpeg', 'audio/wav'];
     const maxSize = 100 * 1024 * 1024; // 100MB
-    
+
     if (!allowedTypes.includes(file.type)) {
         throw new Error(`File type not allowed. Allowed: ${allowedTypes.join(', ')}`);
     }
-    
+
     if (file.size > maxSize) {
         throw new Error(`File too large. Max size: 100MB`);
     }
-    
+
     const fileExt = file.name.split('.').pop();
     const fileName = `${crypto.randomUUID()}.${fileExt}`;
     const filePath = `${fileName}`;

@@ -37,9 +37,12 @@ import {
 } from 'lucide-react';
 import TranslationManager from './TranslationManager';
 import { VideoEditor, AudioEditor, ImmersiveEditor, ScormEditor, EmbedEditor } from './ContentEditors';
+import QuizManagement from './QuizManagement';
 import { useToast } from './Toast';
 import OrientationPrompt from './OrientationPrompt';
 import { useAuth } from '../contexts/AuthContext';
+import { adminQuizService } from '../services/quizService';
+import { Quiz as QuizType } from '../types';
 
 const RTL_LOCALES = ['ar-SA', 'he-IL', 'fa-IR', 'ur-PK'];
 
@@ -152,8 +155,23 @@ const CourseBuilder: React.FC = () => {
         }
     }, [activeModuleId, course.modules]);
 
-    const [viewMode, setViewMode] = useState<'curriculum' | 'settings'>('curriculum');
+    const [viewMode, setViewMode] = useState<'curriculum' | 'settings' | 'quizzes'>('curriculum');
     const [isUploading, setIsUploading] = useState(false);
+    const [availableQuizzes, setAvailableQuizzes] = useState<QuizType[]>([]);
+
+    useEffect(() => {
+        const loadQuizzes = async () => {
+            if (course.id && course.id !== 'new') {
+                try {
+                    const data = await adminQuizService.getCourseQuizzes(course.id);
+                    setAvailableQuizzes(data.filter(q => q.status === 'published'));
+                } catch (e) {
+                    console.error("Failed to load quizzes", e);
+                }
+            }
+        };
+        loadQuizzes();
+    }, [course.id]);
 
     // Localization State
     const [currentLocale, setCurrentLocale] = useState('en-US');
@@ -492,6 +510,43 @@ const CourseBuilder: React.FC = () => {
                 return isDefaultLocale ? <ScormEditor {...commonProps} /> : <div className="text-gray-500 italic">SCORM Packages are global.</div>;
             case ContentType.EMBED:
                 return isDefaultLocale ? <EmbedEditor {...commonProps} /> : <div className="text-gray-500 italic">Embed Code is global.</div>;
+            case ContentType.QUIZ:
+                return (
+                    <div className="space-y-6">
+                        <div className="p-8 glass-card border-hama-gold/20 flex flex-col items-center justify-center text-center space-y-6">
+                            <div className="w-16 h-16 bg-hama-gold/10 rounded-full flex items-center justify-center text-hama-gold">
+                                <CheckSquare size={32} />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-text-primary serif mb-2">Associate Quiz</h3>
+                                <p className="text-sm text-text-muted max-w-sm">Select a published quiz to associate with this lesson. Quizzes must be published in the Quizzes tab first.</p>
+                            </div>
+
+                            {!isDefaultLocale ? (
+                                <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-yellow-400 text-xs">
+                                    Quiz association is managed in the Default Locale.
+                                </div>
+                            ) : (
+                                <div className="w-full max-w-md">
+                                    <label className="block text-[10px] font-black text-text-secondary uppercase tracking-[0.2em] mb-3 ml-1 text-left">Select Quiz</label>
+                                    <select
+                                        className={`w-full p-4 glass border border-white/10 rounded-xl text-sm font-bold text-text-primary focus:ring-1 focus:ring-hama-gold/30 outline-none ${transparentInputClass}`}
+                                        value={activeLesson.metadata.quizId || ''}
+                                        onChange={(e) => updateLesson({ metadata: { ...activeLesson.metadata, quizId: e.target.value } })}
+                                    >
+                                        <option value="">-- Choose a Quiz --</option>
+                                        {availableQuizzes.map(quiz => (
+                                            <option key={quiz.id} value={quiz.id}>{quiz.title}</option>
+                                        ))}
+                                    </select>
+                                    {availableQuizzes.length === 0 && (
+                                        <p className="mt-4 text-[10px] text-red-400 font-bold uppercase tracking-widest">No published quizzes found for this course.</p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
             default:
                 return (
                     <div className="min-h-[400px] space-y-4">
@@ -575,6 +630,12 @@ const CourseBuilder: React.FC = () => {
                             Course
                         </button>
                         <button
+                            onClick={() => setViewMode('quizzes')}
+                            className={`px-4 md:px-6 py-2 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'quizzes' ? 'bg-hama-gold text-black shadow-lg shadow-hama-gold/20' : 'text-text-muted hover:text-white'}`}
+                        >
+                            Quizzes
+                        </button>
+                        <button
                             onClick={() => setViewMode('settings')}
                             className={`px-4 md:px-6 py-2 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'settings' ? 'bg-hama-gold text-black shadow-lg shadow-hama-gold/20' : 'text-text-muted hover:text-white'}`}
                         >
@@ -618,7 +679,7 @@ const CourseBuilder: React.FC = () => {
                 )}
 
                 {/* Sidebar: Structure - Fixed width on desktop, overlay on mobile */}
-                <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:hidden'} absolute lg:relative lg:translate-x-0 w-[85vw] sm:w-80 lg:w-96 h-full flex-shrink-0 border-r border-hama-gold/10 bg-bg-primary/95 lg:bg-bg-primary/40 backdrop-blur-xl lg:backdrop-blur-none flex flex-col z-[45] transition-transform duration-300 ease-in-out`}>
+                <div className={`${sidebarOpen ? 'translate-x-0 lg:flex' : '-translate-x-full lg:hidden'} flex absolute lg:static lg:inset-auto lg:translate-x-0 w-[85vw] sm:w-80 lg:w-96 h-full flex-shrink-0 border-r border-hama-gold/10 bg-bg-primary/95 lg:bg-bg-primary/40 backdrop-blur-xl lg:backdrop-blur-none flex-col z-[45] transition-all duration-300 ease-in-out`}>
                     <div className="p-8 flex justify-between items-center border-b border-white/5 bg-white/2">
                         <h3 className="text-[11px] font-black text-text-muted uppercase tracking-[0.3em] flex items-center gap-3">
                             <ListChecks size={16} className="text-hama-gold/40" />
@@ -832,6 +893,16 @@ const CourseBuilder: React.FC = () => {
                         </div>
                     )}
 
+                    {viewMode === 'quizzes' && (
+                        <div className="max-w-7xl mx-auto py-6 md:py-8 px-4 md:px-8">
+                            <QuizManagement
+                                courseId={course.id}
+                                courseTitle={getLocalized(course, 'title') || course.title}
+                                courseDescription={getLocalized(course, 'description') || course.description}
+                            />
+                        </div>
+                    )}
+
                     {viewMode === 'settings' ? (
                         /* COURSE SETTINGS VIEW */
                         <div className="max-w-4xl mx-auto py-8 md:py-16 px-4 md:px-12 animate-in fade-in duration-500 space-y-8 md:space-y-12">
@@ -842,6 +913,18 @@ const CourseBuilder: React.FC = () => {
                                 </h3>
 
                                 <div className="space-y-8">
+
+                                    {/* Author Name */}
+                                    <div className="space-y-4">
+                                        <label className="block text-[10px] font-black text-text-muted uppercase tracking-widest ml-1">Author Name</label>
+                                        <input
+                                            type="text"
+                                            className={`w-full p-6 rounded-3xl text-[13px] font-bold ${inputBaseClass}`}
+                                            placeholder="Enter author name..."
+                                            value={course.author || ''}
+                                            onChange={(e) => setCourse({ ...course, author: e.target.value })}
+                                        />
+                                    </div>
 
                                     {/* Description */}
                                     <div className="space-y-4">
@@ -1172,13 +1255,13 @@ const CourseBuilder: React.FC = () => {
                         <h3 className="text-xl font-bold text-hama-gold mb-4">Publish Course</h3>
                         <p className="text-text-muted mb-6">Are you sure you want to publish this course? It will be visible to all students.</p>
                         <div className="flex gap-4">
-                            <button 
+                            <button
                                 onClick={() => setShowVersionPanel(false)}
                                 className="flex-1 py-3 bg-white/10 text-white rounded-xl"
                             >
                                 Cancel
                             </button>
-                            <button 
+                            <button
                                 onClick={handlePublish}
                                 className="flex-1 py-3 bg-hama-gold text-black font-bold rounded-xl"
                             >

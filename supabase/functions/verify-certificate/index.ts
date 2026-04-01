@@ -11,8 +11,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get('MY_SUPABASE_URL')!
-    const supabaseKey = Deno.env.get('MY_SERVICE_KEY')!
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Get unique code from URL params
@@ -20,9 +20,9 @@ Deno.serve(async (req) => {
     const uniqueCode = url.searchParams.get('code')
 
     if (!uniqueCode) {
-      return new Response(JSON.stringify({ 
-        valid: false, 
-        message: 'Certificate code is required' 
+      return new Response(JSON.stringify({
+        valid: false,
+        message: 'Certificate code is required'
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -74,9 +74,9 @@ Deno.serve(async (req) => {
     })
 
   } catch (error) {
-    return new Response(JSON.stringify({ 
-      valid: false, 
-      message: error.message 
+    return new Response(JSON.stringify({
+      valid: false,
+      message: error.message
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

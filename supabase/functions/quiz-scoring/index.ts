@@ -16,17 +16,63 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get('MY_SUPABASE_URL')!
-    const supabaseKey = Deno.env.get('MY_SERVICE_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const myUrl = Deno.env.get('MY_SUPABASE_URL')
+    const myKey = Deno.env.get('MY_SERVICE_KEY')
+
+    console.log('--- Debug Info ---')
+    console.log('SUPABASE_URL defined:', !!supabaseUrl)
+    console.log('SUPABASE_SERVICE_ROLE_KEY defined:', !!serviceKey)
+    console.log('MY_SUPABASE_URL defined:', !!myUrl)
+    console.log('MY_SERVICE_KEY defined:', !!myKey)
+
+    const supabase = createClient(supabaseUrl!, serviceKey!)
 
     // Get user from auth header
-    const authHeader = req.headers.get('Authorization')!
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    const authHeader = req.headers.get('Authorization')
+    const apikeyHeader = req.headers.get('apikey')
 
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    console.log('Authorization header present:', !!authHeader)
+    console.log('apikey header present:', !!apikeyHeader)
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('Auth check failed: Missing or invalid Authorization header')
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Missing or invalid Authorization header',
+        debug: { authHeaderPresent: !!authHeader }
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+    const token = authHeader.replace('Bearer ', '')
+
+    // Validate token and get user
+    let user;
+    try {
+      console.log('Attempting to validate token...')
+      const { data: userData, error: authError } = await supabase.auth.getUser(token)
+      if (authError || !userData?.user) {
+        console.log('Token validation failed:', authError?.message)
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Invalid token: ' + (authError?.message || 'No user found'),
+          debug: { authErrorCode: authError?.status, authErrorMessage: authError?.message }
+        }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+      user = userData.user;
+      console.log('User validated successfully:', user.id)
+    } catch (e: any) {
+      console.log('Token validation exception:', e.message)
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Token validation failed: ' + e.message
+      }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })

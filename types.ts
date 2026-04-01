@@ -48,6 +48,7 @@ export interface CourseVersion {
 export interface ContentMetadata {
   // Video & Audio
   streamUrl?: string;
+  youtubeId?: string;
   captionsUrl?: string;
   transcript?: string;
   duration?: number;
@@ -69,6 +70,9 @@ export interface ContentMetadata {
   // Delivery
   lowBandwidthMode?: boolean;
   offlineAvailable?: boolean;
+
+  // Quiz Association
+  quizId?: string;
 }
 
 // Localization Types

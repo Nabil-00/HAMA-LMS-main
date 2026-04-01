@@ -72,6 +72,27 @@ a:hover { color: #E5C76B !important; }
   --tw-shadow-color: rgba(212, 175, 55, 0.15) !important;
 }
 
+/* Glow Effects */
+.glow-gold {
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3) !important;
+  border-color: rgba(212, 175, 55, 0.6) !important;
+}
+
+.glow-emerald {
+  box-shadow: 0 0 20px rgba(4, 99, 7, 0.3) !important;
+  border-color: rgba(4, 99, 7, 0.6) !important;
+}
+
+/* Premium Card Transitions */
+.card-hover-alt {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.card-hover-alt:hover {
+  transform: translateY(-4px) scale(1.01) !important;
+  background: rgba(212, 175, 55, 0.12) !important;
+}
+
 /* Gradients */
 .from-yellow-500 { --tw-gradient-from: #D4AF37 !important; }
 .to-yellow-500 { --tw-gradient-to: #B8962E !important; }

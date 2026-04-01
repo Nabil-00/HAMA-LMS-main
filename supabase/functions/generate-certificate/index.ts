@@ -16,12 +16,18 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get('MY_SUPABASE_URL')!
-    const supabaseKey = Deno.env.get('MY_SERVICE_KEY')!
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Get user from auth header
-    const authHeader = req.headers.get('Authorization')!
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
     const token = authHeader.replace('Bearer ', '')
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
 
@@ -60,7 +66,7 @@ Deno.serve(async (req) => {
         .select('id')
         .eq('course_id', courseId)
         .single()
-      
+
       if (quizData) {
         const { data: attemptData } = await supabase
           .from('quiz_attempts')

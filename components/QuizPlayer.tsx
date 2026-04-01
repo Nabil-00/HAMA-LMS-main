@@ -10,11 +10,11 @@ interface QuizPlayerProps {
   onCertificateGenerated?: () => void;
 }
 
-const QuizPlayer: React.FC<QuizPlayerProps> = ({ 
-  quizId, 
-  courseId, 
+const QuizPlayer: React.FC<QuizPlayerProps> = ({
+  quizId,
+  courseId,
   onComplete,
-  onCertificateGenerated 
+  onCertificateGenerated
 }) => {
   const {
     quiz,
@@ -86,68 +86,91 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
   // Result Screen
   if (showResult && result) {
     return (
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="glass-card p-8 max-w-2xl mx-auto text-center"
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-card p-8 max-w-2xl mx-auto text-center border-t-4 border-[#D4AF37]"
       >
-        <div className={`w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center ${
-          result.passed 
-            ? 'bg-gradient-to-br from-[#D4AF37] to-[#B8860B]' 
-            : 'bg-red-500/20'
-        }`}>
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", damping: 12, stiffness: 200 }}
+          className={`w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center ${result.passed
+              ? 'bg-gradient-to-br from-[#D4AF37] to-[#B8860B] shadow-[0_0_30px_rgba(212,175,55,0.4)]'
+              : 'bg-red-500/20'
+            }`}
+        >
           {result.passed ? (
-            <Award className="w-12 h-12 text-[#D4AF37]" />
+            <Award className="w-12 h-12 text-[#1A1A1A]" />
           ) : (
             <XCircle className="w-12 h-12 text-red-500" />
           )}
-        </div>
+        </motion.div>
 
-        <h2 className="text-3xl font-bold text-[#F5F5DC] mb-2">
-          {result.passed ? 'Congratulations!' : 'Keep Practicing!'}
+        <h2 className="text-3xl font-bold text-[#F5F5DC] mb-2 serif italic">
+          {result.passed ? 'Abun Alfahari!' : 'Kada Ka Karaya!'}
         </h2>
-        
-        <p className="text-[#A0A0A0] mb-6">
-          {result.passed 
-            ? 'You have successfully passed the quiz' 
-            : 'You did not pass this time. Don\'t give up!'
+
+        <p className="text-[#A0A0A0] mb-8 font-sans">
+          {result.passed
+            ? 'Kun yi nasara a wannan gwajin cikin nasara'
+            : 'Ba ku samu nasara ba a wannan karon. Kada ku karaya!'
           }
         </p>
 
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="glass-dark p-4 rounded-lg">
-            <div className="text-3xl font-bold text-[#D4AF37]">{result.score}%</div>
-            <div className="text-sm text-[#A0A0A0]">Your Score</div>
-          </div>
-          <div className="glass-dark p-4 rounded-lg">
-            <div className="text-3xl font-bold text-[#F5F5DC]">{result.correctCount}/{result.totalQuestions}</div>
-            <div className="text-sm text-[#A0A0A0]">Correct</div>
-          </div>
-          <div className="glass-dark p-4 rounded-lg">
-            <div className="text-3xl font-bold text-[#F5F5DC]">{quiz.passPercentage}%</div>
-            <div className="text-sm text-[#A0A0A0]">Required</div>
-          </div>
-        </div>
+        <motion.div
+          variants={{
+            hidden: { opacity: 0 },
+            show: {
+              opacity: 1,
+              transition: { staggerChildren: 0.1 }
+            }
+          }}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-3 gap-4 mb-8"
+        >
+          {[
+            { label: 'Your Score', value: `${result.score}%`, color: '#D4AF37' },
+            { label: 'Correct', value: `${result.correctCount}/${result.totalQuestions}`, color: '#F5F5DC' },
+            { label: 'Required', value: `${quiz.passPercentage}%`, color: '#F5F5DC' }
+          ].map((item, idx) => (
+            <motion.div
+              key={idx}
+              variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
+              className="glass-dark p-4 rounded-xl border border-white/5"
+            >
+              <div className="text-2xl font-bold" style={{ color: item.color }}>{item.value}</div>
+              <div className="text-[10px] uppercase tracking-widest text-[#A0A0A0] mt-1">{item.label}</div>
+            </motion.div>
+          ))}
+        </motion.div>
 
         {result.passed && (
-          <div className="mb-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mb-6"
+          >
             {certificate ? (
-              <div className="glass-dark p-4 rounded-lg">
-                <p className="text-[#A0A0A0] mb-2">Your Certificate</p>
-                <p className="text-[#D4AF37] font-mono text-lg">{certificate.uniqueCode}</p>
-                <p className="text-sm text-[#A0A0A0] mt-2">Issued on {new Date(certificate.issuedAt).toLocaleDateString()}</p>
+              <div className="glass-dark p-6 rounded-xl border border-[#D4AF37]/30 bg-gradient-to-br from-[#D4AF37]/5 to-transparent">
+                <p className="text-[10px] uppercase tracking-widest text-[#A0A0A0] mb-2">Verification Code</p>
+                <p className="text-[#D4AF37] font-mono text-xl tracking-wider">{certificate.uniqueCode}</p>
+                <div className="h-px bg-[#D4AF37]/20 my-4" />
+                <p className="text-xs text-[#A0A0A0]">Issued on {new Date(certificate.issuedAt).toLocaleDateString()}</p>
               </div>
             ) : (
               <button
                 onClick={handleGenerateCertificate}
                 disabled={loading}
-                className="btn-primary flex items-center justify-center gap-2 mx-auto"
+                className="w-full py-4 bg-[#D4AF37] text-[#1A1A1A] rounded-xl font-bold flex items-center justify-center gap-3 shadow-[0_20px_40px_rgba(212,175,55,0.2)] hover:scale-[1.02] transition-transform disabled:opacity-50"
               >
                 <Award className="w-5 h-5" />
                 {loading ? 'Generating...' : 'Download Certificate'}
               </button>
             )}
-          </div>
+          </motion.div>
         )}
 
         <button
@@ -156,10 +179,10 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
             loadQuiz(quizId);
             setShowResult(false);
           }}
-          className="btn-secondary flex items-center justify-center gap-2 mx-auto"
+          className="text-[#A0A0A0] hover:text-[#D4AF37] flex items-center justify-center gap-2 mx-auto mt-4 text-sm font-medium transition-colors"
         >
           <RotateCcw className="w-4 h-4" />
-          Try Again
+          Take Quiz Again
         </button>
       </motion.div>
     );
@@ -176,10 +199,10 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
             <span>{answeredCount}/{quiz.questions.length} answered</span>
           </div>
         </div>
-        
+
         {/* Progress Bar */}
         <div className="h-2 bg-[#1A1A1A] rounded-full overflow-hidden">
-          <motion.div 
+          <motion.div
             className="h-full bg-gradient-to-r from-[#D4AF37] to-[#B8860B]"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
@@ -192,46 +215,51 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
       <AnimatePresence mode="wait">
         <motion.div
           key={currentQuestionIndex}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.2 }}
-          className="glass-card p-6 mb-6"
+          initial={{ opacity: 0, x: 20, scale: 0.98 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          exit={{ opacity: 0, x: -20, scale: 0.98 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          className="glass-card p-8 mb-8 border-l-4 border-[#D4AF37] overflow-hidden relative shadow-2xl"
         >
-          <div className="flex items-start gap-4 mb-6">
-            <span className="flex-shrink-0 w-10 h-10 rounded-full bg-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37] font-bold">
+          <div className="noise opacity-5 absolute inset-0 pointer-events-none" />
+          <div className="flex items-start gap-6 mb-8 relative z-10">
+            <span className="flex-shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-[#D4AF37] to-[#B8860B] flex items-center justify-center text-[#1A1A1A] font-black text-xl shadow-[0_10px_20px_rgba(212,175,55,0.2)]">
               {currentQuestionIndex + 1}
             </span>
-            <p className="text-lg text-[#F5F5DC] leading-relaxed">
+            <p className="text-2xl font-bold text-[#F5F5DC] leading-snug serif">
               {currentQuestion.questionText}
             </p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4 relative z-10">
             {['a', 'b', 'c', 'd'].map((option) => {
               const isSelected = selectedAnswers[currentQuestion.id] === option;
               const optionText = currentQuestion[`option${option.toUpperCase() as 'A' | 'B' | 'C' | 'D'}` as keyof typeof currentQuestion];
-              
+
               return (
                 <button
                   key={option}
                   onClick={() => selectAnswer(currentQuestion.id, option)}
-                  className={`w-full p-4 rounded-lg text-left transition-all duration-200 flex items-center gap-3 ${
-                    isSelected 
-                      ? 'bg-[#D4AF37]/20 border-2 border-[#D4AF37]' 
-                      : 'glass-dark border-2 border-transparent hover:border-[#D4AF37]/50'
-                  }`}
+                  className={`w-full p-5 rounded-xl text-left transition-all duration-300 flex items-center gap-5 group border-2 ${isSelected
+                      ? 'bg-[#D4AF37]/10 border-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.1)]'
+                      : 'glass-dark border-white/5 hover:border-[#D4AF37]/30 hover:bg-white/5 shadow-lg'
+                    }`}
                 >
-                  <span className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-semibold ${
-                    isSelected ? 'bg-[#D4AF37] text-[#1A1A1A]' : 'bg-[#333] text-[#A0A0A0]'
-                  }`}>
+                  <span className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg transition-colors ${isSelected ? 'bg-[#D4AF37] text-[#1A1A1A]' : 'bg-[#1A1A1A] text-[#A0A0A0] group-hover:text-[#D4AF37]'
+                    }`}>
                     {option.toUpperCase()}
                   </span>
-                  <span className={isSelected ? 'text-[#F5F5DC]' : 'text-[#A0A0A0]'}>
+                  <span className={`text-lg transition-colors font-medium ${isSelected ? 'text-[#F5F5DC]' : 'text-[#A0A0A0] group-hover:text-[#F5F5DC]'}`}>
                     {optionText as string}
                   </span>
                   {isSelected && (
-                    <CheckCircle className="w-5 h-5 text-[#D4AF37] ml-auto" />
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="ml-auto"
+                    >
+                      <CheckCircle className="w-6 h-6 text-[#D4AF37]" />
+                    </motion.div>
                   )}
                 </button>
               );
@@ -257,13 +285,12 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
             <button
               key={q.id}
               onClick={() => goToQuestion(idx)}
-              className={`w-3 h-3 rounded-full transition-all ${
-                idx === currentQuestionIndex 
-                  ? 'bg-[#D4AF37] scale-125' 
+              className={`w-3 h-3 rounded-full transition-all ${idx === currentQuestionIndex
+                  ? 'bg-[#D4AF37] scale-125'
                   : selectedAnswers[q.id]
                     ? 'bg-[#046307]'
                     : 'bg-[#333] hover:bg-[#444]'
-              }`}
+                }`}
             />
           ))}
         </div>

@@ -61,24 +61,43 @@ export const quizService = {
     attemptId?: string;
     error?: string;
   }> {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) return { success: false, error: 'Not authenticated' };
+
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return { success: false, error: 'Not authenticated' };
 
-    const response = await fetch(
-      `${SUPABASE_URL}/functions/v1/quiz-scoring`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-          'apikey': SUPABASE_ANON_KEY!
-        },
-        body: JSON.stringify({ quizId, answers })
-      }
-    );
+    try {
+      const response = await fetch(
+        `${SUPABASE_URL}/functions/v1/quiz-scoring`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': SUPABASE_ANON_KEY!
+          },
+          body: JSON.stringify({ quizId, answers })
+        }
+      );
 
-    const result = await response.json();
-    return result;
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('Quiz submission failed with status:', response.status);
+        console.error('Response body:', text);
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          return { success: false, error: `Server error (${response.status}): ${text.substring(0, 100)}` };
+        }
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error: any) {
+      console.error('Network error during quiz submission:', error);
+      return { success: false, error: error.message || 'Network error' };
+    }
   },
 
   // Get user's quiz attempts
@@ -118,7 +137,7 @@ export const quizService = {
       .eq('user_id', user.id)
       .order('issued_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (error || !data) return null;
 
@@ -141,6 +160,9 @@ export const quizService = {
     htmlContent?: string;
     error?: string;
   }> {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) return { success: false, error: 'Not authenticated' };
+
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return { success: false, error: 'Not authenticated' };
 
@@ -180,7 +202,10 @@ export const adminQuizService = {
       .select()
       .single();
 
-    if (error) return null;
+    if (error) {
+      console.error('Error creating quiz:', error);
+      return null;
+    }
 
     return {
       id: data.id,
@@ -303,16 +328,16 @@ export const adminQuizService = {
 
     if (countError) return { success: false, error: 'Failed to count questions' };
 
-    if ((questions?.length || 0) < 20) {
-      return { success: false, error: `Need 20 approved questions to publish. Currently have ${questions?.length || 0}.` };
+    if ((questions?.length || 0) < 5) {
+      return { success: false, error: `Need 5 approved questions to publish. Currently have ${questions?.length || 0}.` };
     }
 
     const { error: updateError } = await supabase
       .from('quizzes')
-      .update({ 
-        status: 'published' as QuizStatus, 
+      .update({
+        status: 'published' as QuizStatus,
         total_questions: questions?.length,
-        updated_at: new Date().toISOString() 
+        updated_at: new Date().toISOString()
       })
       .eq('id', quizId);
 

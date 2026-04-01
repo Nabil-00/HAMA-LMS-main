@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Plus, Trash2, Edit3, Check, X, Sparkles, Upload, 
-  ChevronDown, ChevronUp, AlertCircle, Loader2, Eye, EyeOff 
+import {
+  Plus, Trash2, Edit3, Check, X, Upload,
+  ChevronDown, ChevronUp, AlertCircle, Loader2, Eye, EyeOff,
+  FileText, Download
 } from 'lucide-react';
 import { adminQuizService } from '../services/quizService';
-import { quizGeneratorService } from '../services/quizGeneratorService';
 import { Quiz, Question, QuestionStatus } from '../types';
 
 interface QuizManagementProps {
@@ -14,24 +14,26 @@ interface QuizManagementProps {
   courseDescription: string;
 }
 
-type View = 'list' | 'edit' | 'generate';
+type View = 'list' | 'edit' | 'import';
 
-const QuizManagement: React.FC<QuizManagementProps> = ({ 
-  courseId, 
-  courseTitle, 
-  courseDescription 
+const QuizManagement: React.FC<QuizManagementProps> = ({
+  courseId,
+  courseTitle,
+  courseDescription
 }) => {
   const [view, setView] = useState<View>('list');
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
+  const [importProgress, setImportProgress] = useState<{ current: number; total: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [generating, setGenerating] = useState(false);
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    loadQuizzes();
+    if (courseId && courseId !== 'new') {
+      loadQuizzes();
+    }
   }, [courseId]);
 
   const loadQuizzes = async () => {
@@ -59,6 +61,11 @@ const QuizManagement: React.FC<QuizManagementProps> = ({
   };
 
   const handleCreateQuiz = async () => {
+    if (courseId === 'new') {
+      alert('Please save the course first before creating a quiz.');
+      return;
+    }
+
     const title = prompt('Enter quiz title:');
     if (!title) return;
 
@@ -70,6 +77,8 @@ const QuizManagement: React.FC<QuizManagementProps> = ({
         setSelectedQuiz(quiz);
         setQuestions([]);
         setView('edit');
+      } else {
+        setError('Failed to create quiz. Ensure the course is saved and you have the correct permissions.');
       }
     } catch (err) {
       setError('Failed to create quiz');
@@ -122,36 +131,10 @@ const QuizManagement: React.FC<QuizManagementProps> = ({
     }
   };
 
-  const handleGenerateQuestions = async () => {
-    if (!selectedQuiz) return;
-
-    setGenerating(true);
-    setError(null);
-    try {
-      const generatedQuestions = await quizGeneratorService.generateQuizQuestions(
-        courseTitle,
-        courseDescription,
-        20
-      );
-
-      const savedQuestions = await quizGeneratorService.saveGeneratedQuestions(
-        selectedQuiz.id,
-        generatedQuestions
-      );
-
-      await loadQuestions(selectedQuiz.id);
-      setView('edit');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate questions');
-    } finally {
-      setGenerating(false);
-    }
-  };
-
   const handleUpdateQuestionStatus = async (questionId: string, status: QuestionStatus) => {
     try {
       await adminQuizService.updateQuestionStatus(questionId, status);
-      setQuestions(prev => prev.map(q => 
+      setQuestions(prev => prev.map(q =>
         q.id === questionId ? { ...q, status } : q
       ));
     } catch (err) {
@@ -167,6 +150,32 @@ const QuizManagement: React.FC<QuizManagementProps> = ({
       }
     } catch (err) {
       setError('Failed to save question');
+    }
+  };
+
+  const handleBulkImport = async (importedQuestions: Partial<Question>[]) => {
+    if (!selectedQuiz) return;
+
+    setLoading(true);
+    setImportProgress({ current: 0, total: importedQuestions.length });
+    try {
+      let current = 0;
+      for (const q of importedQuestions) {
+        await adminQuizService.saveQuestion({
+          ...q,
+          quizId: selectedQuiz.id,
+          status: 'approved' // Auto-approve imported questions for convenience
+        });
+        current++;
+        setImportProgress({ current, total: importedQuestions.length });
+      }
+      await loadQuestions(selectedQuiz.id);
+      setView('edit');
+    } catch (err) {
+      setError('Failed to import questions');
+    } finally {
+      setLoading(false);
+      setImportProgress(null);
     }
   };
 
@@ -248,13 +257,12 @@ const QuizManagement: React.FC<QuizManagementProps> = ({
                 <div>
                   <h3 className="text-lg font-semibold text-[#F5F5DC]">{quiz.title}</h3>
                   <div className="flex items-center gap-4 mt-1">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      quiz.status === 'published' 
-                        ? 'bg-green-500/20 text-green-400'
-                        : quiz.status === 'draft'
-                          ? 'bg-yellow-500/20 text-yellow-400'
-                          : 'bg-gray-500/20 text-gray-400'
-                    }`}>
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${quiz.status === 'published'
+                      ? 'bg-green-500/20 text-green-400'
+                      : quiz.status === 'draft'
+                        ? 'bg-yellow-500/20 text-yellow-400'
+                        : 'bg-gray-500/20 text-gray-400'
+                      }`}>
                       {quiz.status}
                     </span>
                     <span className="text-sm text-[#A0A0A0]">
@@ -291,34 +299,29 @@ const QuizManagement: React.FC<QuizManagementProps> = ({
               <div>
                 <h3 className="text-xl font-semibold text-[#F5F5DC]">{selectedQuiz.title}</h3>
                 <div className="flex items-center gap-4 mt-2">
-                  <span className={`px-3 py-1 rounded text-sm font-medium ${
-                    selectedQuiz.status === 'published' 
-                      ? 'bg-green-500/20 text-green-400'
-                      : 'bg-yellow-500/20 text-yellow-400'
-                  }`}>
+                  <span className={`px-3 py-1 rounded text-sm font-medium ${selectedQuiz.status === 'published'
+                    ? 'bg-green-500/20 text-green-400'
+                    : 'bg-yellow-500/20 text-yellow-400'
+                    }`}>
                     {selectedQuiz.status}
                   </span>
                   <span className="text-[#A0A0A0]">
-                    {approvedCount}/20 approved questions
+                    {approvedCount}/5 approved questions
                   </span>
                 </div>
               </div>
               <div className="flex gap-3">
                 <button
-                  onClick={handleGenerateQuestions}
-                  disabled={generating || selectedQuiz.status === 'published'}
+                  onClick={() => setView('import')}
+                  disabled={selectedQuiz.status === 'published'}
                   className="btn-secondary flex items-center gap-2"
                 >
-                  {generating ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="w-4 h-4" />
-                  )}
-                  {generating ? 'Generating...' : 'AI Generate'}
+                  <Upload className="w-4 h-4" />
+                  Bulk Import
                 </button>
                 <button
                   onClick={handlePublishQuiz}
-                  disabled={loading || approvedCount < 20 || selectedQuiz.status === 'published'}
+                  disabled={loading || approvedCount < 5 || selectedQuiz.status === 'published'}
                   className="btn-primary flex items-center gap-2"
                 >
                   <Upload className="w-4 h-4" />
@@ -326,10 +329,10 @@ const QuizManagement: React.FC<QuizManagementProps> = ({
                 </button>
               </div>
             </div>
-            {approvedCount < 20 && selectedQuiz.status !== 'published' && (
+            {approvedCount < 5 && selectedQuiz.status !== 'published' && (
               <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-center gap-2 text-yellow-400">
                 <AlertCircle className="w-4 h-4" />
-                <span className="text-sm">Need 20 approved questions to publish (currently {approvedCount})</span>
+                <span className="text-sm">Need 5 approved questions to publish (currently {approvedCount})</span>
               </div>
             )}
           </div>
@@ -339,7 +342,13 @@ const QuizManagement: React.FC<QuizManagementProps> = ({
             <h4 className="text-lg font-semibold text-[#F5F5DC] mb-4">Questions</h4>
             {questions.length === 0 ? (
               <div className="glass-card p-8 text-center">
-                <p className="text-[#A0A0A0] mb-4">No questions yet. Generate some with AI!</p>
+                <p className="text-[#A0A0A0] mb-4">No questions yet. Use bulk import to add questions!</p>
+                <button
+                  onClick={() => setView('import')}
+                  className="btn-primary"
+                >
+                  Bulk Import
+                </button>
               </div>
             ) : (
               questions.map((question, index) => (
@@ -358,6 +367,192 @@ const QuizManagement: React.FC<QuizManagementProps> = ({
           </div>
         </div>
       )}
+
+      {/* Bulk Import View */}
+      {view === 'import' && selectedQuiz && (
+        <BulkImportView
+          onImport={handleBulkImport}
+          onCancel={() => setView('edit')}
+          loading={loading}
+          importProgress={importProgress}
+        />
+      )}
+    </div>
+  );
+};
+
+interface BulkImportViewProps {
+  onImport: (questions: Partial<Question>[]) => void;
+  onCancel: () => void;
+  loading?: boolean;
+  importProgress?: { current: number; total: number } | null;
+}
+
+const BulkImportView: React.FC<BulkImportViewProps> = ({ onImport, onCancel, loading, importProgress }) => {
+  const [text, setText] = useState('');
+  const [parsed, setParsed] = useState<Partial<Question>[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleParse = () => {
+    setError(null);
+    try {
+      // Split by numbers followed by dot/parenthesis at start of line or string
+      const questionBlocks = text.split(/(?:^|\n)\s*\d+[.\)]\s*/).filter(block => block.trim());
+
+      const parsedQuestions: Partial<Question>[] = questionBlocks.map((block, index) => {
+        const lines = block.split('\n').map(l => l.trim()).filter(l => l);
+
+        if (lines.length === 0) throw new Error(`Empty question block at position ${index + 1}`);
+
+        const questionText = lines[0];
+        const options: Record<string, string> = {};
+        let correctOption: 'a' | 'b' | 'c' | 'd' | null = null;
+
+        lines.slice(1).forEach(line => {
+          // Match a) option, A. option, [a] option etc.
+          const optMatch = line.match(/^([a-dA-D])[\)|\]|\.|\s]\s*(.*)/i);
+          if (optMatch && !correctOption) {
+            options[optMatch[1].toLowerCase()] = optMatch[2];
+          }
+
+          // Match Answer: A or Correct: A or just a line that is "Answer: A"
+          const ansMatch = line.match(/(?:Answer|Correct|Key):\s*([a-dA-D])/i);
+          if (ansMatch) {
+            correctOption = ansMatch[1].toLowerCase() as any;
+          }
+        });
+
+        if (!questionText || Object.keys(options).length < 2 || !correctOption) {
+          throw new Error(`Failed to parse question starting with "${questionText.substring(0, 30)}...". Ensure it has options and an answer.`);
+        }
+
+        return {
+          questionText,
+          optionA: options['a'] || '',
+          optionB: options['b'] || '',
+          optionC: options['c'] || '',
+          optionD: options['d'] || '',
+          correctOption: correctOption as any,
+          orderIndex: index
+        };
+      });
+
+      if (parsedQuestions.length === 0) throw new Error('No questions found. Check your format.');
+      setParsed(parsedQuestions);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Invalid format');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="glass-card p-6">
+        <h3 className="text-xl font-bold text-[#F5F5DC] mb-2 flex items-center gap-2">
+          <FileText className="w-5 h-5 text-[#D4AF37]" />
+          Bulk Import Questions
+        </h3>
+        <p className="text-[#A0A0A0] text-sm mb-6">
+          Paste your questions in the format below. Each question should start with a number.
+        </p>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="bg-[#1A1A1A] rounded-lg p-3 border border-[#333]">
+              <p className="text-xs text-[#666] mb-2 uppercase font-bold tracking-wider text-center">Format Example</p>
+              <pre className="text-xs text-[#D4AF37] leading-relaxed">
+                {`1. What is the capital of Nigeria?
+a) Lagos
+b) Abuja
+c) Kano
+d) Kaduna
+Answer: B
+
+2. Next question here...
+...`}
+              </pre>
+            </div>
+
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Paste your questions here..."
+              className="w-full h-[400px] bg-[#0A0A0A] border border-[#333] rounded-lg p-4 text-[#F5F5DC] font-mono text-sm focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] outline-none"
+            />
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-lg font-semibold text-[#F5F5DC]">Preview ({parsed.length})</h4>
+              <button
+                onClick={handleParse}
+                disabled={!text.trim()}
+                className="btn-secondary px-4 py-1.5 text-sm"
+              >
+                Parse Questions
+              </button>
+            </div>
+
+            {error && (
+              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-2 text-red-400 text-sm">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                {error}
+              </div>
+            )}
+
+            <div className="h-[432px] overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-[#333]">
+              {parsed.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-[#444] border-2 border-dashed border-[#222] rounded-xl">
+                  <Download className="w-10 h-10 mb-2 opacity-20" />
+                  <p className="text-sm">Questions will appear here after parsing</p>
+                </div>
+              ) : (
+                parsed.map((q, idx) => (
+                  <div key={idx} className="bg-[#1A1A1A] border border-[#333] rounded-lg p-3 text-sm">
+                    <p className="text-[#F5F5DC] font-medium mb-2">{idx + 1}. {q.questionText}</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[#A0A0A0] text-xs">
+                      <p className={q.correctOption === 'a' ? 'text-green-400 font-bold' : ''}>A: {q.optionA}</p>
+                      <p className={q.correctOption === 'b' ? 'text-green-400 font-bold' : ''}>B: {q.optionB}</p>
+                      <p className={q.correctOption === 'c' ? 'text-green-400 font-bold' : ''}>C: {q.optionC}</p>
+                      <p className={q.correctOption === 'd' ? 'text-green-400 font-bold' : ''}>D: {q.optionD}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4 mt-8 pt-6 border-t border-[#333]">
+          {loading && importProgress && (
+            <div className="w-full space-y-2">
+              <div className="flex justify-between text-xs text-[#A0A0A0] font-bold tracking-wider">
+                <span>IMPORTING...</span>
+                <span>{Math.round((importProgress.current / importProgress.total) * 100)}%</span>
+              </div>
+              <div className="h-2 bg-[#1A1A1A] rounded-full overflow-hidden border border-[#333]">
+                <div
+                  className="h-full bg-gradient-to-r from-[#D4AF37] to-[#F2C94C] transition-all duration-300"
+                  style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3">
+            <button onClick={onCancel} disabled={loading} className="btn-secondary disabled:opacity-50">
+              Cancel
+            </button>
+            <button
+              onClick={() => onImport(parsed)}
+              disabled={parsed.length === 0 || loading}
+              className="btn-primary flex items-center gap-2 disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+              {loading ? 'Processing...' : `Import ${parsed.length} Questions`}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -396,7 +591,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
       className="glass-card overflow-hidden"
     >
       {/* Question Header */}
-      <div 
+      <div
         className="p-4 flex items-center justify-between cursor-pointer hover:bg-[#D4AF37]/5"
         onClick={onToggle}
       >
@@ -407,18 +602,12 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           <div>
             <p className="text-[#F5F5DC] line-clamp-1">{question.questionText}</p>
             <div className="flex items-center gap-3 mt-1">
-              {question.generatedByAi && (
-                <span className="flex items-center gap-1 text-xs text-[#D4AF37]">
-                  <Sparkles className="w-3 h-3" /> AI Generated
-                </span>
-              )}
-              <span className={`px-2 py-0.5 rounded text-xs ${
-                question.status === 'approved' 
-                  ? 'bg-green-500/20 text-green-400'
-                  : question.status === 'rejected'
-                    ? 'bg-red-500/20 text-red-400'
-                    : 'bg-yellow-500/20 text-yellow-400'
-              }`}>
+              <span className={`px-2 py-0.5 rounded text-xs ${question.status === 'approved'
+                ? 'bg-green-500/20 text-green-400'
+                : question.status === 'rejected'
+                  ? 'bg-red-500/20 text-red-400'
+                  : 'bg-yellow-500/20 text-yellow-400'
+                }`}>
                 {question.status}
               </span>
             </div>
@@ -507,15 +696,13 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                     {['a', 'b', 'c', 'd'].map(opt => {
                       const isCorrect = question.correctOption === opt;
                       return (
-                        <div 
-                          key={opt} 
-                          className={`flex items-center gap-2 p-2 rounded ${
-                            isCorrect ? 'bg-green-500/20 border border-green-500/50' : 'bg-[#1A1A1A]'
-                          }`}
+                        <div
+                          key={opt}
+                          className={`flex items-center gap-2 p-2 rounded ${isCorrect ? 'bg-green-500/20 border border-green-500/50' : 'bg-[#1A1A1A]'
+                            }`}
                         >
-                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
-                            isCorrect ? 'bg-green-500 text-white' : 'bg-[#333] text-[#A0A0A0]'
-                          }`}>
+                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${isCorrect ? 'bg-green-500 text-white' : 'bg-[#333] text-[#A0A0A0]'
+                            }`}>
                             {opt.toUpperCase()}
                           </span>
                           <span className={isCorrect ? 'text-green-400' : 'text-[#A0A0A0]'}>
@@ -531,20 +718,24 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                       <p className="text-[#F5F5DC]">{question.explanation}</p>
                     </div>
                   )}
-                  {!readOnly && question.status === 'draft' && (
+                  {!readOnly && (
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => onStatusChange('approved')}
-                        className="btn-primary flex items-center gap-2 text-sm"
-                      >
-                        <Check className="w-4 h-4" /> Approve
-                      </button>
-                      <button
-                        onClick={() => onStatusChange('rejected')}
-                        className="btn-secondary text-red-400 border-red-400/50 hover:bg-red-400/20 text-sm"
-                      >
-                        <X className="w-4 h-4" /> Reject
-                      </button>
+                      {question.status !== 'approved' && (
+                        <button
+                          onClick={() => onStatusChange('approved')}
+                          className="btn-primary flex items-center gap-2 text-sm"
+                        >
+                          <Check className="w-4 h-4" /> Approve
+                        </button>
+                      )}
+                      {question.status !== 'rejected' && (
+                        <button
+                          onClick={() => onStatusChange('rejected')}
+                          className="btn-secondary text-red-400 border-red-400/50 hover:bg-red-400/20 text-sm"
+                        >
+                          <X className="w-4 h-4" /> Reject
+                        </button>
+                      )}
                       <button
                         onClick={() => setIsEditing(true)}
                         className="btn-secondary flex items-center gap-2 text-sm"
@@ -564,3 +755,4 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
 };
 
 export default QuizManagement;
+

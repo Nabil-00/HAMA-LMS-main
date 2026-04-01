@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HAMA LMS — Features Implemented</title>
+  <style>
+    :root {
+      --text: #111827;
+      --muted: #4b5563;
+      --border: #e5e7eb;
+      --accent: #b45309;
+    }
+
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--text);
+      margin: 0;
+      background: #fff;
+    }
+
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 48px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin: 0 0 6px 0;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 22px;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin: 22px 0 8px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    h3 {
+      font-size: 14px;
+      margin: 12px 0 6px;
+      color: var(--text);
+    }
+
+    p {
+      margin: 6px 0 10px;
+      color: var(--text);
+      line-height: 1.45;
+      font-size: 13.5px;
+    }
+
+    ul {
+      margin: 6px 0 12px 18px;
+      padding: 0;
+      color: var(--text);
+      line-height: 1.45;
+      font-size: 13.5px;
+    }
+
+    li { margin: 4px 0; }
+
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .callout {
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #fffbeb;
+      margin: 10px 0 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .card strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .footer {
+      margin-top: 26px;
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+
+    @media print {
+      .page { padding: 18mm 16mm; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>HAMA LMS — Features Implemented</h1>
+    <div class="subtitle">Last updated: 2026-03-17</div>
+
+    <div class="callout">
+      This is a stakeholder-friendly summary of learner-facing features delivered so far.
+    </div>
+
+    <h2>1) Learning Progress Tracking <span class="tag">Lesson completion</span></h2>
+    <h3>What it does</h3>
+    <ul>
+      <li>Tracks which lessons a learner has completed per course.</li>
+      <li>Calculates completion percentage using total lessons in the curriculum vs completed lessons.</li>
+    </ul>
+    <h3>What the learner sees</h3>
+    <ul>
+      <li>Progress updates as they move through lessons.</li>
+      <li>Progress is used to control access to assessments.</li>
+    </ul>
+
+    <h2>2) Progress Visibility <span class="tag">Mobile + Desktop</span></h2>
+    <div class="grid">
+      <div class="card">
+        <strong>Sidebar progress</strong>
+        <ul>
+          <li>Progress bar visible while taking a course.</li>
+          <li>Also displays <em>percentage</em> and <em>completed/total</em> count.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <strong>Floating progress chip</strong>
+        <ul>
+          <li>Fixed top-right chip showing lesson position (e.g. <code>5 / 18</code>).</li>
+          <li>Also includes current completion percentage.</li>
+          <li>Positioned to avoid overlapping the course header on mobile and desktop.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>3) Resume Learning (Persistent State) <span class="tag">Continue where you left off</span></h2>
+    <h3>What it does</h3>
+    <ul>
+      <li>Remembers the last lesson a learner was viewing for each course.</li>
+      <li>Restores that lesson after refresh, browser close/reopen, or logout/login.</li>
+    </ul>
+    <h3>What the learner experiences</h3>
+    <ul>
+      <li>Course reopens exactly where they stopped — no manual searching.</li>
+      <li>Saves only when the learner changes lessons (minimal background activity).</li>
+    </ul>
+
+    <h2>4) Quiz Access Rules <span class="tag">Progress-gated</span></h2>
+    <h3>Current rule delivered</h3>
+    <ul>
+      <li>Final assessment unlocks after at least <strong>80%</strong> lesson completion (where configured).</li>
+    </ul>
+    <h3>What the learner sees</h3>
+    <ul>
+      <li>Clear “Assessment Locked” message when requirements are not met.</li>
+      <li>Their current progress percentage and completed lessons count.</li>
+    </ul>
+
+    <h2>Implementation Notes (High level)</h2>
+    <ul>
+      <li>Added a lightweight database state record per user + course to store last viewed lesson.</li>
+      <li>Kept lesson completion tracking separate from resume position (no duplication).</li>
+      <li>UI updates are immediate; database writes are minimal (1 write per lesson navigation).</li>
+    </ul>
+
+    <h2>Acceptance Criteria Covered</h2>
+    <ul>
+      <li>User returns to last lesson after refresh.</li>
+      <li>Works after logout/login.</li>
+      <li>No noticeable performance lag.</li>
+      <li>Only one DB write per lesson navigation.</li>
+      <li>Progress chip visible on mobile and updates on lesson change.</li>
+    </ul>
+
+    <div class="footer">
+      PDF tip: open this file in the browser and use <strong>Print → Save as PDF</strong>.
+    </div>
+  </div>
+</body>
+</html>

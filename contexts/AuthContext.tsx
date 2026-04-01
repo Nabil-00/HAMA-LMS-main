@@ -31,9 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check active sessions and sets the user
     supabase.auth.getSession().then(({ data: { session } }: any) => {
       if (session) {
-        // Create user from session metadata immediately
-        setUser(createUserFromSession(session.user));
-        fetchProfile(session.user.id);
+        fetchProfile(session.user.id, session.user);
       } else {
         setLoading(false);
       }
@@ -42,9 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Listen for changes on auth state (logged in, signed out, etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, session: any) => {
       if (session) {
-        // Always set user from session metadata first (optimistic update)
-        setUser(createUserFromSession(session.user));
-        fetchProfile(session.user.id);
+        fetchProfile(session.user.id, session.user);
       } else {
         setUser(null);
         setLoading(false);
@@ -54,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string, sessionUser?: any) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -63,16 +59,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (error) {
-        // Profile doesn't exist yet - keep the session-based user
-        console.log('Profile not found, using session metadata');
-        setLoading(false);
-        return;
-      }
-      if (data) {
+        // Profile doesn't exist yet - fallback to session user if provided
+        if (sessionUser) {
+          setUser(createUserFromSession(sessionUser));
+        }
+      } else if (data) {
         setUser(data as User);
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      if (sessionUser && !user) {
+        setUser(createUserFromSession(sessionUser));
+      }
     } finally {
       setLoading(false);
     }
@@ -103,9 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
       if (session) {
-        // Set user from session first (optimistic update)
-        setUser(createUserFromSession(session.user));
-        await fetchProfile(session.user.id);
+        await fetchProfile(session.user.id, session.user);
       }
     } catch (err) {
       setLoading(false);
@@ -138,9 +134,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // If no confirmation required (emailConfirm disabled in Supabase), fetch profile
       if (data.session) {
-        await fetchProfile(data.user!.id);
+        await fetchProfile(data.user!.id, data.user);
       }
-      
+
       return { requiresEmailConfirmation: false };
     } catch (err: any) {
       setLoading(false);
@@ -152,7 +148,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     try {
       const redirectUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
-      console.log('Google OAuth redirect URL:', redirectUrl);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -172,8 +167,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) console.error('Error logging out:', error);
+    try {
+      setUser(null);
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error logging out globally, attempting local logout:', error);
+        await supabase.auth.signOut({ scope: 'local' });
+      }
+    } catch (err) {
+      console.error('Error during logout:', err);
+      await supabase.auth.signOut({ scope: 'local' });
+    }
   };
 
   const hasRole = (allowedRoles: UserRole[]): boolean => {

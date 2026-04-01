@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Course, Module, Lesson, ContentType } from '../types';
+import { Course, Module, Lesson, ContentType, Quiz } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { getCourses } from '../services/courseService';
+import { getCourses, deleteCourse } from '../services/courseService';
+import { adminQuizService, quizService } from '../services/quizService';
+import { progressService, CourseProgress } from '../services/progressService';
 import { getUserEnrollments, enrollUser, createPayment, verifyPayment, getPaymentByReference } from '../services/userService';
 import { initializePaystack, loadPaystackScript } from '../services/paystackService';
 import {
@@ -27,15 +29,69 @@ import {
   Minimize2,
   ArrowLeft,
   PenTool,
-  Lock
+  Lock,
+  Volume2,
+  Trash2
 } from 'lucide-react';
+import HeadlessYoutubePlayer from './HeadlessYoutubePlayer';
+import VideoPlayer from './VideoPlayer';
+import QuizPlayer from './QuizPlayer';
+
 
 // --- COURSE PLAYER (Formerly Viewer) ---
 const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () => void }) => {
+  const { user } = useAuth();
   const [activeModuleId, setActiveModuleId] = useState<string | null>(course.modules[0]?.id || null);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
+  const [activeQuizId, setActiveQuizId] = useState<string | null>(null);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [courseProgress, setCourseProgress] = useState<CourseProgress | null>(null);
+  const [quizAccessError, setQuizAccessError] = useState<string | null>(null);
+
+  // Fetch quizzes
+  useEffect(() => {
+    const fetchQuizzes = async () => {
+      const allQuizzes = await adminQuizService.getCourseQuizzes(course.id);
+      setQuizzes(allQuizzes.filter(q => q.status === 'published'));
+    };
+    fetchQuizzes();
+  }, [course]);
+
+  // Load progress when course or user changes
+  useEffect(() => {
+    const loadProgress = async () => {
+      if (user?.id && course.id) {
+        const progress = await progressService.getCourseProgress(user.id, course.id);
+        setCourseProgress(progress);
+      }
+    };
+    loadProgress();
+  }, [user?.id, course.id]);
+
+  // Load resume state on course load
+  useEffect(() => {
+    const loadResumeState = async () => {
+      if (user?.id && course.id) {
+        const state = await progressService.getUserCourseState(user.id, course.id);
+        if (state?.lastLessonId) {
+          setActiveLessonId(state.lastLessonId);
+        }
+      }
+    };
+    loadResumeState();
+  }, [user?.id, course.id]);
+
+  // Save state when lesson changes
+  useEffect(() => {
+    const saveState = async () => {
+      if (user?.id && course.id && activeLessonId) {
+        await progressService.updateUserCourseState(user.id, course.id, activeLessonId);
+      }
+    };
+    saveState();
+  }, [activeLessonId, user?.id, course.id]);
 
   // Auto-close sidebar on mobile when window resizes
   useEffect(() => {
@@ -46,25 +102,27 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Auto-select first lesson if available and nothing selected
+  // Auto-select first lesson if available and nothing selected (fallback)
   useEffect(() => {
     if (!activeLessonId && course.modules.length > 0 && course.modules[0].lessons.length > 0) {
       setActiveLessonId(course.modules[0].lessons[0].id);
     }
-  }, [course]);
+  }, [course, activeLessonId]);
 
-  // Scroll to top when lesson changes
+  // Scroll to top when lesson or quiz changes
   useEffect(() => {
     if (contentRef.current) {
       contentRef.current.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [activeLessonId]);
+  }, [activeLessonId, activeQuizId]);
 
   // Flatten lessons for navigation
   const allLessons = course.modules.flatMap((m: Module) => m.lessons.map((l: Lesson) => ({ ...l, moduleId: m.id })));
   const activeLesson = allLessons.find((l: any) => l.id === activeLessonId);
   const currentIndex = allLessons.findIndex((l: any) => l.id === activeLessonId);
   const nextLesson = allLessons[currentIndex + 1];
+  const isLastLesson = currentIndex === allLessons.length - 1;
+  const nextQuiz = isLastLesson && quizzes.length > 0 ? quizzes[0] : null;
 
   const getIconForType = (type: ContentType) => {
     switch (type) {
@@ -86,7 +144,21 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
       return (
         <div className="space-y-6 md:space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto">
           <div className="aspect-video bg-black rounded-2xl md:rounded-3xl overflow-hidden flex items-center justify-center relative shadow-2xl ring-1 ring-white/10 group">
-            {lesson.metadata.streamUrl ? (
+            {lesson.metadata.youtubeId ? (
+              <div className="w-full h-full">
+                {lesson.type === ContentType.VIDEO_VOD || lesson.type === ContentType.VIDEO_LIVE ? (
+                  <VideoPlayer
+                    youtubeId={lesson.metadata.youtubeId}
+                    title={lesson.title}
+                  />
+                ) : (
+                  <HeadlessYoutubePlayer
+                    youtubeId={lesson.metadata.youtubeId}
+                    title={lesson.title}
+                  />
+                )}
+              </div>
+            ) : lesson.metadata.streamUrl ? (
               <div className="text-text-primary flex flex-col items-center gap-4 md:gap-6">
                 <div className="w-16 h-16 md:w-24 md:h-24 bg-hama-gold rounded-full flex items-center justify-center text-black shadow-2xl transform group-hover:scale-110 transition-transform cursor-pointer">
                   <PlayCircle className="w-[32px] h-[32px] md:w-[48px] md:h-[48px]" fill="currentColor" />
@@ -133,7 +205,70 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
       );
     }
 
-    // Default / Text / Audio / etc
+    if (lesson.type === ContentType.AUDIO_PODCAST) {
+      return (
+        <div className="space-y-6 md:space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-5xl mx-auto">
+          {lesson.metadata.youtubeId ? (
+            <HeadlessYoutubePlayer
+              youtubeId={lesson.metadata.youtubeId}
+              title={lesson.title}
+            />
+          ) : lesson.metadata.streamUrl ? (
+            <div className="glass rounded-2xl md:rounded-[3rem] p-6 md:p-12 border border-hama-gold/10 flex flex-col md:flex-row items-center gap-6 md:gap-12 relative overflow-hidden">
+              <div className="w-32 h-32 md:w-48 md:h-48 bg-hama-gold/5 rounded-2xl md:rounded-3xl flex items-center justify-center border border-hama-gold/10 relative z-10 shrink-0">
+                <Mic className="w-12 h-12 md:w-16 md:h-16 text-hama-gold" />
+              </div>
+              <div className="flex-1 space-y-4 md:space-y-6 relative z-10 text-center md:text-left w-full">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-hama-gold/10 border border-hama-gold/20 text-hama-gold text-[9px] font-black uppercase tracking-widest">
+                  Audio Distribution
+                </div>
+                <h1 className="text-2xl md:text-5xl font-black text-text-primary serif leading-tight">{lesson.title}</h1>
+                <audio
+                  src={lesson.metadata.streamUrl}
+                  controls
+                  className="w-full h-10 md:h-12 rounded-xl filter invert hue-rotate-180 opacity-60 hover:opacity-100 transition-opacity"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="text-center p-20 glass rounded-3xl border-dashed border-white/10">
+              <Mic size={48} className="mx-auto mb-4 opacity-10" />
+              <p className="text-sm font-bold uppercase tracking-widest text-text-muted">No Audio Asset Found</p>
+            </div>
+          )}
+
+          <div className="max-w-4xl mx-auto space-y-4 md:space-y-8">
+            <h4 className="text-[11px] font-black text-hama-gold uppercase tracking-[0.4em] mb-4">Transcript & Notes</h4>
+            <div className="text-lg text-text-secondary leading-relaxed font-light whitespace-pre-wrap font-sans">
+              {lesson.content || "Deep silence accompanies this module. Insights pending."}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (lesson.type === ContentType.QUIZ) {
+      return (
+        <div className="max-w-4xl mx-auto py-10 md:py-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="text-center mb-6 md:mb-12">
+            <div className="w-20 h-20 bg-hama-gold/10 border border-hama-gold/20 rounded-3xl flex items-center justify-center mx-auto mb-4 md:mb-8">
+              <CheckSquare size={40} className="text-hama-gold" />
+            </div>
+            <h1 className="text-3xl md:text-5xl font-black text-text-primary serif mb-4">{lesson.title}</h1>
+            <p className="text-text-secondary font-light">Complete this assessment to progress in the course.</p>
+          </div>
+          {lesson.metadata.quizId ? (
+            <QuizPlayer quizId={lesson.metadata.quizId} courseId={course.id} />
+          ) : (
+            <div className="p-10 text-center glass rounded-2xl border border-dashed border-white/10">
+              <p className="text-text-muted font-black uppercase tracking-widest text-[10px]">No Quiz Associated with this Assessment</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Default / Text / etc
     return (
       <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="flex items-center gap-3 md:gap-4 text-hama-gold mb-6 md:mb-12">
@@ -159,10 +294,11 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
         </div>
       </div>
     );
+
   }
 
   return (
-    <div className="fixed inset-0 z-[100] bg-bg-primary flex flex-col animate-in slide-in-from-bottom-8 duration-500 overflow-hidden text-text-primary selection:bg-hama-gold selection:text-black backdrop-blur-3xl">
+    <div className="absolute inset-0 z-[100] bg-bg-primary flex flex-col animate-in slide-in-from-bottom-8 duration-500 overflow-hidden text-text-primary selection:bg-hama-gold selection:text-black backdrop-blur-3xl">
       {/* Background visual layers */}
       <div className="noise" />
       <div className="aura" style={{ top: '-10%', right: '-10%' }} />
@@ -182,7 +318,7 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
               {course.title}
             </h3>
             <p className="text-[8px] md:text-[10px] text-text-muted flex items-center gap-2 md:gap-4 font-black uppercase tracking-[0.2em] mt-1">
-              <span className="flex items-center gap-1 md:gap-2"><User size={10} className="text-hama-gold" /> {course.author || 'Author'}</span>
+              <span className="flex items-center gap-1 md:gap-2"><User size={10} className="text-hama-gold" /> {course.author || 'Unknown Author'}</span>
               <span className="w-1 h-1 md:w-1.5 md:h-1.5 bg-white/10 rounded-full"></span>
               <span className="text-hama-gold">HAMA Studio</span>
             </p>
@@ -198,6 +334,20 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
             {sidebarOpen ? 'Focus Mode' : 'Course View'}
           </button>
           <div className="h-8 w-px bg-white/5 mx-2 hidden md:block"></div>
+
+          <div className="md:hidden bg-black/70 backdrop-blur px-3 py-1.5 rounded-full text-[11px] text-white shadow-md">
+            <div className="flex items-center gap-2">
+              <span className="opacity-80 font-black uppercase tracking-widest text-[9px]">Progress</span>
+              <span className="font-black">
+                {Math.max(currentIndex, 0) + 1} / {allLessons.length}
+              </span>
+              <span className="opacity-70">•</span>
+              <span className="opacity-90">
+                {courseProgress?.percentage ?? 0}%
+              </span>
+            </div>
+          </div>
+
           <button
             onClick={onClose}
             className="px-6 md:px-8 py-2 md:py-3 bg-hama-gold text-black font-black text-[9px] md:text-[11px] uppercase tracking-[0.2em] rounded-xl md:rounded-2xl hover:bg-text-primary transition-all shadow-xl shadow-hama-gold/10"
@@ -209,9 +359,23 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
 
       {/* Viewer Body */}
       <div className="flex flex-1 overflow-hidden relative z-10">
+        {/* Desktop Progress Chip */}
+        <div className="hidden md:block fixed top-4 right-4 z-50 bg-black/70 backdrop-blur px-3 py-1.5 rounded-full text-[11px] text-white shadow-md md:top-20 md:right-8">
+          <div className="flex items-center gap-2">
+            <span className="opacity-80 font-black uppercase tracking-widest text-[9px]">Progress</span>
+            <span className="font-black">
+              {Math.max(currentIndex, 0) + 1} / {allLessons.length}
+            </span>
+            <span className="opacity-70">•</span>
+            <span className="opacity-90">
+              {courseProgress?.percentage ?? 0}%
+            </span>
+          </div>
+        </div>
+
         {/* Sidebar: Syllabus */}
         {sidebarOpen && (
-          <div className="fixed md:relative inset-y-0 left-0 w-full sm:w-80 md:w-96 glass border-r border-hama-gold/10 overflow-y-auto flex flex-col transition-all duration-300 z-50 md:z-10 h-full md:h-auto">
+          <div className="fixed md:static md:inset-auto inset-y-0 left-0 w-full sm:w-80 md:w-96 glass border-r border-hama-gold/10 overflow-y-auto flex flex-col transition-all duration-300 z-50 md:z-10 h-full">
             <div className="p-6 md:p-8 border-b border-hama-gold/5 flex items-center justify-between md:block">
               <div className="flex flex-col">
                 <div className="flex items-center justify-between mb-2 md:mb-4">
@@ -220,8 +384,17 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
                     {course.modules.reduce((acc: number, m: Module) => acc + m.lessons.length, 0)} Lessons
                   </span>
                 </div>
-                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden hidden md:block">
-                  <div className="h-full bg-hama-gold w-1/3 shadow-[0_0_10px_rgba(242,201,76,0.5)]"></div>
+                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-hama-gold shadow-[0_0_10px_rgba(242,201,76,0.5)] transition-all duration-500" 
+                    style={{ width: `${courseProgress?.percentage || 0}%` }}
+                  ></div>
+                </div>
+                <div className="mt-3 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.25em] text-text-muted">
+                  <span>{courseProgress?.percentage ?? 0}%</span>
+                  <span>
+                    {courseProgress?.completedLessons ?? 0}/{courseProgress?.totalLessons ?? 0}
+                  </span>
                 </div>
               </div>
               <button
@@ -233,7 +406,7 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {course.modules.map((module: Module) => (
+              {course.modules.map((module: Module, moduleIndex: number) => (
                 <div key={module.id} className="bento-card border-hama-gold/5 overflow-hidden">
                   <button
                     onClick={() => setActiveModuleId(activeModuleId === module.id ? null : module.id)}
@@ -248,7 +421,14 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
                       {module.lessons.map((lesson: Lesson) => (
                         <div
                           key={lesson.id}
-                          onClick={() => setActiveLessonId(lesson.id)}
+                          onClick={() => {
+                            setActiveLessonId(lesson.id);
+                            if (lesson.type === ContentType.QUIZ && lesson.metadata.quizId) {
+                              setActiveQuizId(lesson.metadata.quizId);
+                            } else {
+                              setActiveQuizId(null);
+                            }
+                          }}
                           className={`px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] flex items-center gap-4 cursor-pointer transition-all border-l-4 ${activeLessonId === lesson.id
                             ? 'bg-hama-gold/10 text-hama-gold border-hama-gold'
                             : 'border-transparent text-text-muted hover:bg-white/5 hover:text-text-secondary'
@@ -258,30 +438,70 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
                             {getIconForType(lesson.type)}
                           </div>
                           <span className="truncate flex-1">{lesson.title}</span>
-                          <span className="text-[9px] opacity-40 font-mono">{lesson.durationMinutes}m</span>
+                          {lesson.type === ContentType.QUIZ ? (
+                            <span className="text-[9px] font-black text-hama-gold uppercase tracking-widest px-2 py-0.5 bg-hama-gold/10 rounded border border-hama-gold/20">Quiz</span>
+                          ) : (
+                            <span className="text-[9px] opacity-40 font-mono">{lesson.durationMinutes}m</span>
+                          )}
                         </div>
                       ))}
+
                     </div>
                   )}
                 </div>
               ))}
+
+              {/* Restore: Dedicated Assessments Section for Standalone Quizzes */}
+              {quizzes.length > 0 && (
+                <div className="mt-8 space-y-4">
+                  <h3 className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] ml-2 mb-4">Course Assessments</h3>
+                  <div className="bento-card border-hama-gold/5 overflow-hidden">
+                    {quizzes.map((quiz) => (
+                      <div
+                        key={quiz.id}
+                        onClick={() => {
+                          setActiveQuizId(quiz.id);
+                          setActiveLessonId(null);
+                        }}
+                        className={`px-6 py-4 text-[10px] font-bold uppercase tracking-[0.15em] flex items-center gap-4 cursor-pointer transition-all border-l-4 ${activeQuizId === quiz.id
+                          ? 'bg-hama-gold/10 text-hama-gold border-hama-gold'
+                          : 'border-transparent text-text-muted hover:bg-white/5 hover:text-text-secondary'
+                          }`}
+                      >
+                        <div className={`${activeQuizId === quiz.id ? 'text-hama-gold' : 'text-white/10'}`}>
+                          <CheckSquare size={14} />
+                        </div>
+                        <span className="truncate flex-1">{quiz.title}</span>
+                        <span className="text-[9px] font-black text-hama-gold uppercase tracking-widest px-2 py-0.5 bg-hama-gold/10 rounded border border-hama-gold/20">Quiz</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {/* Main Content Area */}
-        <div ref={contentRef} className="flex-1 overflow-y-auto p-4 md:p-12 lg:p-20 scroll-smooth bg-transparent">
+        <div ref={contentRef} className="flex-1 overflow-y-auto p-4 md:p-16 lg:p-24 scroll-smooth bg-transparent">
           {activeLesson ? (
-            <div className="pb-32">
+            <div className="pb-12 md:pb-32">
               {renderLessonContent(activeLesson)}
 
-              {nextLesson && (
-                <div className={`mx-auto mt-24 flex justify-end ${(activeLesson.type === ContentType.VIDEO_VOD || activeLesson.type === ContentType.VIDEO_LIVE || activeLesson.type === ContentType.EMBED)
+              {nextLesson ? (
+                <div className={`mx-auto mt-10 md:mt-24 flex justify-end ${(activeLesson.type === ContentType.VIDEO_VOD || activeLesson.type === ContentType.VIDEO_LIVE || activeLesson.type === ContentType.EMBED)
                   ? 'max-w-6xl'
                   : 'max-w-4xl'
                   }`}>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
+                      // Mark current lesson as complete
+                      if (user?.id && activeLessonId) {
+                        await progressService.markLessonComplete(user.id, course.id, activeLessonId);
+                        // Refresh progress
+                        const progress = await progressService.getCourseProgress(user.id, course.id);
+                        setCourseProgress(progress);
+                      }
                       setActiveLessonId(nextLesson.id);
                       setActiveModuleId(nextLesson.moduleId);
                     }}
@@ -296,7 +516,64 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
                     </div>
                   </button>
                 </div>
-              )}
+              ) : isLastLesson && nextQuiz ? (
+                <div className="mx-auto mt-10 md:mt-24 max-w-4xl">
+                  {courseProgress && courseProgress.percentage < 80 ? (
+                    <div className="p-8 bento-card border-hama-gold/10 text-center">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-hama-gold/10 border border-hama-gold/20 flex items-center justify-center text-hama-gold">
+                          <Lock size={24} />
+                        </div>
+                        <div className="flex flex-col items-center relative z-10">
+                          <span className="text-[10px] font-black text-hama-gold/60 uppercase tracking-[0.4em] mb-2">Assessment Locked</span>
+                          <span className="text-lg font-bold text-text-primary serif">Complete at least 80% of lessons</span>
+                          <div className="mt-4 w-full max-w-xs">
+                            <div className="flex justify-between text-[10px] font-black text-hama-gold/60 uppercase tracking-[0.2em] mb-2">
+                              <span>Progress</span>
+                              <span>{courseProgress.percentage}%</span>
+                            </div>
+                            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-hama-gold transition-all duration-500" 
+                                style={{ width: `${courseProgress.percentage}%` }}
+                              />
+                            </div>
+                            <p className="text-[10px] text-text-muted mt-2">
+                              {courseProgress.completedLessons} of {courseProgress.totalLessons} lessons completed
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        // Mark last lesson as complete before quiz
+                        if (user?.id && activeLessonId) {
+                          await progressService.markLessonComplete(user.id, course.id, activeLessonId);
+                          const progress = await progressService.getCourseProgress(user.id, course.id);
+                          setCourseProgress(progress);
+                        }
+                        setActiveQuizId(nextQuiz.id);
+                        setActiveLessonId(null);
+                      }}
+                      className="w-full group flex items-center justify-center gap-6 px-8 py-8 bento-card border-hama-gold/20 hover:border-hama-gold/50 hover:scale-[1.02] transition-all"
+                    >
+                      <div className="flex flex-col items-center relative z-10">
+                        <span className="text-[10px] font-black text-hama-gold/60 uppercase tracking-[0.4em] mb-2">Course Complete</span>
+                        <span className="text-xl font-bold text-text-primary serif group-hover:text-hama-gold transition-colors">Take Final Assessment</span>
+                      </div>
+                      <div className="w-14 h-14 rounded-2xl bg-hama-gold/20 border border-hama-gold/30 flex items-center justify-center text-hama-gold group-hover:bg-hama-gold group-hover:text-black transition-all relative z-10">
+                        <CheckSquare size={24} />
+                      </div>
+                    </button>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          ) : activeQuizId ? (
+            <div className="max-w-4xl mx-auto py-10 md:py-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <QuizPlayer quizId={activeQuizId} courseId={course.id} />
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto">
@@ -345,6 +622,19 @@ const CourseList: React.FC = () => {
     if (!user) return;
     const fetched = await getUserEnrollments(user.id);
     setEnrollments(fetched.map(e => e.courseId));
+  };
+
+  const handleDeleteCourse = async (courseId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this course? This action cannot be undone.")) {
+      try {
+        await deleteCourse(courseId);
+        await loadCourses();
+      } catch (error) {
+        console.error("Failed to delete course", error);
+        alert("Failed to delete course. Please try again.");
+      }
+    }
   };
 
   const handleStartCourse = async (course: Course) => {
@@ -424,8 +714,8 @@ const CourseList: React.FC = () => {
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 -mx-4 md:mx-0 px-2 md:px-0">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-700 mx-0 px-2 md:px-0">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6 md:mb-8">
         <div className="w-full">
           <div className="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-hama-gold/5 border border-hama-gold/10 text-hama-gold text-[9px] font-bold uppercase tracking-[0.3em] mb-3">
             Kayayyakin Darussa
@@ -464,7 +754,11 @@ const CourseList: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
           {filteredCourses.map((course: Course) => (
-            <div key={course.id} className="group bento-card bg-transparent overflow-hidden hover:border-hama-gold/20 hover:-translate-y-2 transition-all duration-500 flex flex-col h-full">
+            <div
+              key={course.id}
+              onClick={() => handleStartCourse(course)}
+              className="group bento-card bg-transparent overflow-hidden hover:border-hama-gold/20 hover:-translate-y-2 transition-all duration-500 flex flex-col h-full cursor-pointer"
+            >
               {/* Thumbnail Area */}
               <div className="h-40 sm:h-48 md:h-56 bg-black relative overflow-hidden">
                 {course.thumbnailUrl ? (
@@ -513,7 +807,7 @@ const CourseList: React.FC = () => {
                 </h3>
 
                 <p className="text-[9px] md:text-sm text-text-secondary mb-2 md:mb-8 line-clamp-2 leading-relaxed font-light flex-1">
-                  {course.description || "Learn the professional production techniques used by top Nigerian artists in this comprehensive HAMA masterclass."}
+                  {course.description || "No description available."}
                 </p>
 
                 <div className="flex items-center justify-between pt-4 md:pt-8 border-t border-white/5 mt-auto">
@@ -521,18 +815,30 @@ const CourseList: React.FC = () => {
                     <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex-shrink-0 flex items-center justify-center text-[11px] font-black text-hama-gold">
                       {(course.author || 'H').charAt(0)}
                     </div>
-                    <span className="text-[10px] font-black text-text-muted uppercase tracking-widest truncate">{course.author || 'Author'}</span>
+                    <span className="text-[10px] font-black text-text-muted uppercase tracking-widest truncate">{course.author || 'Unknown Author'}</span>
                   </div>
 
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
                     {hasRole(['Admin', 'Teacher']) && (
-                      <button
-                        onClick={() => navigate(`/create?courseId=${course.id}`)}
-                        className="p-3 bg-white/5 border border-white/10 text-text-muted hover:text-hama-gold hover:border-hama-gold/30 rounded-xl transition-all"
-                        title="Edit Course"
-                      >
-                        <PenTool size={16} />
-                      </button>
+                      <>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/create?courseId=${course.id}`);
+                          }}
+                          className="p-3 bg-white/5 border border-white/10 text-text-muted hover:text-hama-gold hover:border-hama-gold/30 rounded-xl transition-all"
+                          title="Edit Course"
+                        >
+                          <PenTool size={16} />
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteCourse(course.id, e)}
+                          className="p-3 bg-red-500/10 border border-red-500/20 text-red-500/70 hover:text-red-500 hover:bg-red-500/20 hover:border-red-500/40 rounded-xl transition-all"
+                          title="Delete Course"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </>
                     )}
 
                     <button

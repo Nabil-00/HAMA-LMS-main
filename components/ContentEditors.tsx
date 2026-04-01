@@ -35,98 +35,125 @@ const goldBadgeClass = "px-3 py-1 rounded-full bg-hama-gold/5 border border-hama
 
 // --- VIDEO EDITOR (VOD & LIVE) ---
 export const VideoEditor: React.FC<EditorProps & { isLive?: boolean }> = ({ metadata, onChange, onUpload, isUploading, isLive }) => {
+   const [ytUrl, setYtUrl] = useState('');
+
+   const handleYtSubmit = () => {
+      const ytMatch = ytUrl.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?|shorts|live)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (ytMatch) {
+         onChange({ ...metadata, youtubeId: ytMatch[1], streamUrl: undefined });
+         setYtUrl('');
+      }
+   };
+
+   // Auto-sync on paste/type
+   React.useEffect(() => {
+      const ytMatch = ytUrl.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?|shorts|live)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (ytMatch && ytMatch[1] !== metadata.youtubeId) {
+         onChange({ ...metadata, youtubeId: ytMatch[1], streamUrl: undefined });
+      }
+   }, [ytUrl, metadata.youtubeId, onChange, metadata]);
+
    return (
       <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-         <div className={`${bentoCardClass} p-6 md:p-12 text-center border-dashed border-2 flex flex-col items-center justify-center min-h-[250px] md:min-h-[300px] group relative overflow-hidden`}>
-            <div className="w-16 h-16 md:w-20 md:h-20 bg-hama-gold/10 rounded-2xl md:rounded-3xl flex items-center justify-center mb-4 md:mb-6 border border-hama-gold/20 group-hover:scale-110 transition-transform relative z-10">
-               <MonitorPlay size={32} className="text-hama-gold" />
+         <div className={`${bentoCardClass} p-8 md:p-12 flex flex-col md:flex-row items-center gap-8 md:gap-12 relative overflow-hidden group`}>
+            {metadata.youtubeId ? (
+               <div className="w-full md:w-80 aspect-video rounded-3xl overflow-hidden border border-hama-gold/20 relative z-10 group/preview shadow-2xl">
+                  <img
+                     src={`https://img.youtube.com/vi/${metadata.youtubeId}/maxresdefault.jpg`}
+                     alt="YouTube Preview"
+                     className="w-full h-full object-cover transition-transform duration-700 group-hover/preview:scale-110"
+                     onError={(e) => {
+                        (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${metadata.youtubeId}/mqdefault.jpg`;
+                     }}
+                  />
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/preview:opacity-100 transition-opacity">
+                     <button
+                        onClick={() => onChange({ ...metadata, youtubeId: undefined })}
+                        className="p-3 bg-red-500 rounded-2xl text-white hover:bg-red-600 transition-all active:scale-95 shadow-xl"
+                     >
+                        <Trash2 size={24} />
+                     </button>
+                  </div>
+                  <div className="absolute top-4 right-4 px-3 py-1 bg-hama-gold text-black text-[10px] font-black rounded-full uppercase tracking-widest shadow-lg">YouTube</div>
+               </div>
+            ) : (
+               <div className="w-24 h-24 md:w-32 md:h-32 bg-hama-gold/10 rounded-[2rem] flex items-center justify-center flex-shrink-0 border border-hama-gold/20 relative z-10 group-hover:scale-110 transition-transform duration-500">
+                  <MonitorPlay size={48} className="text-hama-gold" />
+               </div>
+            )}
+
+            <div className="flex-1 font-sans relative z-10 text-center md:text-left space-y-4">
+               <h3 className="text-text-primary font-bold text-2xl serif">
+                  {isLive ? 'Live Stream Session' : 'Video Masterclass Content'}
+               </h3>
+               <p className="text-text-secondary text-sm font-light max-w-xl">
+                  {isLive
+                     ? 'Connect your audience via YouTube Live. Paste the stream URL or Video ID below to synchronize.'
+                     : 'HAMA LMS uses YouTube as our primary global delivery network. Enter any YouTube video URL to begin.'}
+               </p>
+
+               <div className="flex flex-wrap gap-4 pt-2 justify-center md:justify-start">
+                  <span className={goldBadgeClass}>4K Supported</span>
+                  <span className={goldBadgeClass}>Global CDN</span>
+                  <span className={goldBadgeClass}>Auto-Transcoding</span>
+               </div>
             </div>
-            <h3 className="text-text-primary font-bold text-xl serif relative z-10">
-               {isLive ? 'Live Stream Configuration' : 'Video Content Source'}
-            </h3>
-            <p className="text-text-secondary text-sm mt-3 max-w-md font-light font-sans relative z-10">
-               {isLive
-                  ? 'Connect via professional RTMP or high-fidelity HLS. Stream keys are generated upon publishing.'
-                  : 'Supports MP4, MOV, WebM. Professional HLS/DASH transcoding will be applied.'}
-            </p>
-            <button
-               onClick={() => !isLive && document.getElementById('lesson-media-upload')?.click()}
-               disabled={isUploading}
-               className={`mt-8 px-8 py-3 bg-hama-gold text-black font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-hama-gold/10 hover:bg-text-primary hover:shadow-hama-gold/30 transition-all flex items-center gap-3 active:scale-95 font-sans relative z-10 disabled:opacity-50`}
-            >
-               {isUploading ? (
-                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-               ) : (
-                  <UploadCloud size={18} />
-               )}
-               {isLive ? 'Initialize Stream' : 'Select Video Asset'}
-               <input
-                  id="lesson-media-upload"
-                  type="file"
-                  hidden
-                  accept="video/*"
-                  onChange={(e) => e.target.files?.[0] && onUpload?.(e.target.files[0])}
-               />
-            </button>
          </div>
 
          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-6">
-               <h4 className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] ml-1 font-sans">Technical Routes</h4>
-               <div className="space-y-4">
-                  <div className="space-y-2">
-                     <label className="text-[9px] font-bold text-hama-gold uppercase tracking-widest ml-1 font-sans">Source URL (HLS/DASH)</label>
-                     <input
-                        type="text"
-                        className={`w-full px-4 py-3 rounded-2xl text-xs font-mono ${inputBaseClass}`}
-                        placeholder="https://cdn.hama.academy/streams/..."
-                        value={metadata.streamUrl || ''}
-                        onChange={(e) => onChange({ ...metadata, streamUrl: e.target.value })}
-                     />
-                  </div>
-                  <div className="space-y-2">
-                     <label className="text-[9px] font-bold text-hama-gold uppercase tracking-widest ml-1 font-sans">Subtitles / Captions (VTT)</label>
-                     <input
-                        type="text"
-                        className={`w-full px-4 py-3 rounded-2xl text-xs font-mono ${inputBaseClass}`}
-                        placeholder="https://..."
-                        value={metadata.captionsUrl || ''}
-                        onChange={(e) => onChange({ ...metadata, captionsUrl: e.target.value })}
-                     />
-                  </div>
+            <div className={`${bentoCardClass} p-8 relative overflow-hidden`}>
+               <h4 className="text-[10px] font-black text-hama-gold uppercase tracking-[0.3em] mb-6 ml-1 font-sans relative z-10 flex items-center gap-3">
+                  <Youtube size={16} /> YouTube Integration
+               </h4>
+               <div className="flex gap-3">
+                  <input
+                     type="text"
+                     className={`flex-1 px-4 py-4 rounded-2xl border ${inputBaseClass}`}
+                     placeholder="Paste YouTube Video URL..."
+                     value={ytUrl}
+                     onChange={(e) => setYtUrl(e.target.value)}
+                  />
+                  <button
+                     onClick={handleYtSubmit}
+                     disabled={!ytUrl}
+                     className="px-8 py-4 bg-hama-gold text-black rounded-2xl text-[11px] font-black uppercase tracking-widest disabled:opacity-30 transition-all hover:bg-text-primary active:scale-95 shadow-lg shadow-hama-gold/10"
+                  >
+                     Sync
+                  </button>
                </div>
+               <p className="text-[10px] text-text-muted mt-4 font-light font-sans ml-1 leading-relaxed">
+                  Support for standard URLs, short links, and live stream identifiers.
+               </p>
             </div>
 
-            <div className="space-y-6">
-               <h4 className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] ml-1 font-sans">Content Security</h4>
+            <div className={`${bentoCardClass} p-8 relative overflow-hidden`}>
+               <h4 className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] mb-6 ml-1 font-sans relative z-10 flex items-center gap-3">
+                  <Lock size={16} className="text-hama-gold" /> Security & Access
+               </h4>
                <div className="space-y-4">
-                  <label className={`flex items-center gap-4 p-5 ${bentoCardClass} rounded-2xl cursor-pointer hover:border-hama-gold/30 transition-colors group relative overflow-hidden`}>
+                  <label className={`flex items-center gap-4 p-4 bg-white/5 border border-white/5 rounded-2xl cursor-pointer hover:border-hama-gold/30 transition-all group`}>
                      <input
                         type="checkbox"
                         checked={metadata.drmEnabled}
                         onChange={(e) => onChange({ ...metadata, drmEnabled: e.target.checked })}
-                        className="w-5 h-5 rounded border-white/10 bg-white/5 text-hama-gold focus:ring-hama-gold relative z-10"
+                        className="w-5 h-5 rounded border-white/10 bg-white/5 text-hama-gold focus:ring-hama-gold"
                      />
-                     <div className="flex-1 font-sans relative z-10">
-                        <div className="flex items-center gap-2 font-bold text-sm text-text-primary group-hover:text-hama-gold transition-colors">
-                           <Lock size={14} className="text-hama-gold" /> DRM Protection
-                        </div>
-                        <p className="text-[10px] text-text-muted uppercase font-black tracking-widest mt-1">Widevine & FairPlay Integration</p>
+                     <div>
+                        <div className="text-sm font-bold text-text-primary group-hover:text-hama-gold transition-colors">Digital Rights Protection</div>
+                        <p className="text-[9px] text-text-muted uppercase font-black tracking-widest mt-0.5">Enforce playback restrictions</p>
                      </div>
                   </label>
 
-                  <label className={`flex items-center gap-4 p-5 ${bentoCardClass} rounded-2xl cursor-pointer hover:border-hama-gold/30 transition-colors group relative overflow-hidden`}>
+                  <label className={`flex items-center gap-4 p-4 bg-white/5 border border-white/5 rounded-2xl cursor-pointer hover:border-hama-gold/30 transition-all group`}>
                      <input
                         type="checkbox"
                         checked={metadata.lowBandwidthMode}
                         onChange={(e) => onChange({ ...metadata, lowBandwidthMode: e.target.checked })}
-                        className="w-5 h-5 rounded border-white/10 bg-white/5 text-hama-gold focus:ring-hama-gold relative z-10"
+                        className="w-5 h-5 rounded border-white/10 bg-white/5 text-hama-gold focus:ring-hama-gold"
                      />
-                     <div className="flex-1 font-sans relative z-10">
-                        <div className="flex items-center gap-2 font-bold text-sm text-text-primary group-hover:text-hama-gold transition-colors">
-                           <WifiOff size={14} className="text-hama-gold" /> Adaptive Bitrate
-                        </div>
-                        <p className="text-[10px] text-text-muted uppercase font-black tracking-widest mt-1">Low-bandwidth optimization</p>
+                     <div>
+                        <div className="text-sm font-bold text-text-primary group-hover:text-hama-gold transition-colors">Low-Bandwidth Optima</div>
+                        <p className="text-[9px] text-text-muted uppercase font-black tracking-widest mt-0.5">Optimized for rural connections</p>
                      </div>
                   </label>
                </div>
@@ -138,23 +165,62 @@ export const VideoEditor: React.FC<EditorProps & { isLive?: boolean }> = ({ meta
 
 // --- AUDIO / PODCAST EDITOR ---
 export const AudioEditor: React.FC<EditorProps> = ({ metadata, onChange, onUpload, isUploading }) => {
+   const [ytUrl, setYtUrl] = useState('');
+
+   const handleYtSubmit = () => {
+      const ytMatch = ytUrl.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?|shorts|live)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (ytMatch) {
+         onChange({ ...metadata, youtubeId: ytMatch[1] });
+         setYtUrl('');
+      }
+   };
+
+   // Auto-sync on paste/type
+   React.useEffect(() => {
+      const ytMatch = ytUrl.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?|shorts|live)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (ytMatch && ytMatch[1] !== metadata.youtubeId) {
+         onChange({ ...metadata, youtubeId: ytMatch[1] });
+      }
+   }, [ytUrl, metadata.youtubeId, onChange, metadata]);
+
    return (
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-         <div className={`${bentoCardClass} p-8 flex items-center gap-8 relative overflow-hidden`}>
-            <div className="w-24 h-24 bg-hama-gold/10 rounded-3xl flex items-center justify-center flex-shrink-0 border border-hama-gold/20 relative z-10">
-               <Mic size={40} className="text-hama-gold" />
-            </div>
-            <div className="font-sans relative z-10">
+         <div className={`${bentoCardClass} p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden`}>
+            {metadata.youtubeId ? (
+               <div className="w-32 h-20 md:w-40 md:h-24 rounded-2xl overflow-hidden border border-hama-gold/20 relative z-10 group shadow-lg">
+                  <img
+                     src={`https://img.youtube.com/vi/${metadata.youtubeId}/mqdefault.jpg`}
+                     alt="YouTube Preview"
+                     className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                     <button
+                        onClick={() => onChange({ ...metadata, youtubeId: undefined })}
+                        className="p-2 bg-red-500 rounded-full text-white hover:bg-red-600 transition-colors"
+                     >
+                        <Trash2 size={16} />
+                     </button>
+                  </div>
+                  <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-hama-gold text-black text-[8px] font-black rounded uppercase">YouTube</div>
+               </div>
+            ) : (
+               <div className="w-24 h-24 bg-hama-gold/10 rounded-3xl flex items-center justify-center flex-shrink-0 border border-hama-gold/20 relative z-10">
+                  <Mic size={40} className="text-hama-gold" />
+               </div>
+            )}
+
+            <div className="flex-1 font-sans relative z-10 text-center md:text-left">
                <h3 className="text-text-primary font-bold text-xl serif">Audio Content / Podcast</h3>
-               <p className="text-text-secondary text-sm mt-2 font-light">Upload audio recordings (MP3/WAV) or provide an external RSS feed.</p>
-               <div className="flex gap-4 mt-6">
+               <p className="text-text-secondary text-sm mt-2 font-light">Upload audio recordings (MP3/WAV) or sync with a YouTube source.</p>
+
+               <div className="flex flex-wrap gap-4 mt-6 justify-center md:justify-start">
                   <button
                      disabled={isUploading}
                      onClick={() => document.getElementById('audio-upload')?.click()}
                      className="px-6 py-2.5 bg-hama-gold text-black text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-text-primary transition-all disabled:opacity-50 flex items-center gap-2"
                   >
                      {isUploading ? <div className="w-3 h-3 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <UploadCloud size={14} />}
-                     Upload Asset
+                     {metadata.streamUrl ? 'Change Asset' : 'Upload Asset'}
                      <input
                         id="audio-upload"
                         type="file"
@@ -163,23 +229,58 @@ export const AudioEditor: React.FC<EditorProps> = ({ metadata, onChange, onUploa
                         onChange={(e) => e.target.files?.[0] && onUpload?.(e.target.files[0])}
                      />
                   </button>
-                  <button className="px-6 py-2.5 bg-white/5 border border-white/10 text-text-secondary text-[10px] font-black uppercase tracking-widest rounded-xl hover:border-hama-gold hover:text-hama-gold transition-all">Direct Record</button>
+                  {metadata.streamUrl && !metadata.youtubeId && (
+                     <button
+                        onClick={() => onChange({ ...metadata, streamUrl: '' })}
+                        className="px-4 py-2.5 bg-red-500/10 text-red-500 text-[10px] font-black uppercase tracking-widest rounded-xl border border-red-500/20 hover:bg-red-500 hover:text-white transition-all"
+                     >
+                        Remove
+                     </button>
+                  )}
                </div>
             </div>
          </div>
 
-         <div className={`${bentoCardClass} p-6 relative overflow-hidden`}>
-            <h4 className="text-[10px] font-black text-hama-gold uppercase tracking-[0.3em] mb-4 ml-1 font-sans relative z-10">Transcript & Accessibility</h4>
-            <textarea
-               className={`w-full h-48 p-4 rounded-2xl text-sm leading-relaxed ${inputBaseClass}`}
-               placeholder="Enter the audio transcript here..."
-               value={metadata.transcript || ''}
-               onChange={(e) => onChange({ ...metadata, transcript: e.target.value })}
-            ></textarea>
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className={`${bentoCardClass} p-6 relative overflow-hidden`}>
+               <h4 className="text-[10px] font-black text-hama-gold uppercase tracking-[0.3em] mb-4 ml-1 font-sans relative z-10 flex items-center gap-2">
+                  <Youtube size={14} /> YouTube Integration
+               </h4>
+               <div className="flex gap-3">
+                  <input
+                     type="text"
+                     className={`flex-1 px-4 py-3 rounded-xl border ${inputBaseClass}`}
+                     placeholder="Paste YouTube Video URL..."
+                     value={ytUrl}
+                     onChange={(e) => setYtUrl(e.target.value)}
+                  />
+                  <button
+                     onClick={handleYtSubmit}
+                     disabled={!ytUrl}
+                     className="px-6 py-3 bg-hama-gold/10 text-hama-gold border border-hama-gold/20 rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-30 transition-all hover:bg-hama-gold hover:text-black"
+                  >
+                     Sync
+                  </button>
+               </div>
+               <p className="text-[10px] text-text-muted mt-3 font-light font-sans ml-1">
+                  Connect high-fidelity audio direct from YouTube servers.
+               </p>
+            </div>
+
+            <div className={`${bentoCardClass} p-6 relative overflow-hidden`}>
+               <h4 className="text-[10px] font-black text-hama-gold uppercase tracking-[0.3em] mb-4 ml-1 font-sans relative z-10">Transcript & Accessibility</h4>
+               <textarea
+                  className={`w-full h-24 p-4 rounded-2xl text-sm leading-relaxed ${inputBaseClass}`}
+                  placeholder="Enter the audio transcript here..."
+                  value={metadata.transcript || ''}
+                  onChange={(e) => onChange({ ...metadata, transcript: e.target.value })}
+               ></textarea>
+            </div>
          </div>
       </div>
    );
 };
+
 
 // --- VR / AR EDITOR ---
 export const ImmersiveEditor: React.FC<EditorProps> = ({ metadata, onChange }) => {
@@ -298,7 +399,7 @@ export const EmbedEditor: React.FC<EditorProps> = ({ metadata, onChange }) => {
       let embedCode = '';
 
       // YouTube
-      const ytMatch = urlInput.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      const ytMatch = urlInput.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?|shorts|live)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
       if (ytMatch) {
          embedCode = `<iframe width="100%" height="450" src="https://www.youtube.com/embed/${ytMatch[1]}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
       }
@@ -312,8 +413,12 @@ export const EmbedEditor: React.FC<EditorProps> = ({ metadata, onChange }) => {
       }
 
       // Fallback if no specific provider matched but it looks like a URL
+      // Check if it's a YouTube-like URL that maybe didn't match the ID (e.g., missing video ID or malformed)
       else if (urlInput.startsWith('http')) {
-         embedCode = `<iframe src="${urlInput}" width="100%" height="450" frameborder="0" allowfullscreen></iframe>`;
+         const isYtUrl = urlInput.includes('youtube.com') || urlInput.includes('youtu.be');
+         if (!isYtUrl) {
+            embedCode = `<iframe src="${urlInput}" width="100%" height="450" frameborder="0" allowfullscreen></iframe>`;
+         }
       }
 
       if (embedCode) {

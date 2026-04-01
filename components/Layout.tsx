@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
   BookOpen,
@@ -37,7 +37,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout, hasRole } = useAuth();
   const { addToast } = useToast();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
   const { scrollYProgress } = useScroll();
   const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
@@ -87,46 +88,77 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         )}
 
         <aside className={`
-          fixed md:relative inset-y-0 left-0 w-72 flex flex-col z-50 transition-transform duration-300 border-r border-[#D4AF37]/10
+          fixed md:static md:inset-auto inset-y-0 left-0 flex flex-col z-40 transition-all duration-300 border-r border-[#D4AF37]/10
+          ${isSidebarCollapsed ? 'w-20' : 'w-72'}
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
           md:flex
         `}
-        style={{ backgroundColor: 'rgba(26, 26, 26, 0.95)', backdropFilter: 'blur(24px)' }}
+          style={{ backgroundColor: 'rgba(26, 26, 26, 0.95)', backdropFilter: 'blur(24px)' }}
         >
-          <div className="p-8 mb-4">
-            <motion.div 
+          <div className={`p-6 mb-4 flex items-center ${isSidebarCollapsed ? 'justify-center p-4' : 'p-8'}`}>
+            <motion.div
               whileHover={{ scale: 1.05 }}
+              onClick={() => navigate('/')}
               className="flex items-center gap-4 group cursor-pointer"
             >
-              <div className="w-14 h-14 rounded-2xl bg-[#D4AF37] flex items-center justify-center shadow-[0_20px_60px_rgba(212,175,55,0.4)]">
-                <span className="font-black text-2xl text-[#1A1A1A] tracking-tighter">H</span>
+              <div className={`rounded-2xl bg-[#D4AF37] flex items-center justify-center shadow-[0_20px_60px_rgba(212,175,55,0.4)] transition-all ${isSidebarCollapsed ? 'w-10 h-10' : 'w-14 h-14'}`}>
+                <span className={`font-black tracking-tighter text-[#1A1A1A] ${isSidebarCollapsed ? 'text-xl' : 'text-2xl'}`}>H</span>
               </div>
-              <div>
-                <h1 className="text-[14px] font-black text-[#F5F5DC] uppercase tracking-[0.2em] font-sans">HAMA</h1>
-                <p className="text-[9px] text-[#D4AF37]/60 font-bold uppercase tracking-[0.2em] mt-0.5">Student Portal</p>
-              </div>
+              <AnimatePresence>
+                {!isSidebarCollapsed && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <h1 className="text-[14px] font-black text-[#F5F5DC] uppercase tracking-[0.2em] font-sans">HAMA</h1>
+                    <p className="text-[9px] text-[#D4AF37]/60 font-bold uppercase tracking-[0.2em] mt-0.5">Student Portal</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           </div>
 
           {/* User Badge */}
-          <div className="px-6 py-8">
-            <motion.div 
+          <div className={`px-4 py-6 ${isSidebarCollapsed ? 'px-2' : 'px-6'}`}>
+            <motion.div
               whileHover={{ scale: 1.02 }}
-              className="flex items-center gap-4 p-4 rounded-2xl border border-[#D4AF37]/10 transition-all"
+              className={`flex items-center gap-4 p-4 rounded-2xl border border-[#D4AF37]/10 transition-all ${isSidebarCollapsed ? 'justify-center p-2' : ''}`}
               style={{ backgroundColor: 'rgba(212, 175, 55, 0.05)' }}
             >
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg ${user?.role === 'Admin' ? 'bg-[#D4AF37] text-[#1A1A1A]' : 'bg-[#F5F5DC]/5 text-[#F5F5DC]'}`}>
+              <div className={`flex-shrink-0 rounded-2xl flex items-center justify-center font-black text-lg ${user?.role === 'Admin' ? 'bg-[#D4AF37] text-[#1A1A1A]' : 'bg-[#F5F5DC]/5 text-[#F5F5DC]'} ${isSidebarCollapsed ? 'w-10 h-10' : 'w-12 h-12'}`}>
                 {user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold truncate text-[#F5F5DC]">{user?.name || (user?.email?.split('@')[0])}</p>
-                <p className="text-[9px] text-[#666666] uppercase tracking-[0.2em] font-black">{user?.role}</p>
-              </div>
-              <ChevronRight size={16} className="text-[#D4AF37]/40" />
+              <AnimatePresence>
+                {!isSidebarCollapsed && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex-1 min-w-0"
+                  >
+                    <p className="text-sm font-bold truncate text-[#F5F5DC]">{user?.name || (user?.email?.split('@')[0])}</p>
+                    <p className="text-[9px] text-[#666666] uppercase tracking-[0.2em] font-black">{user?.role}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <AnimatePresence>
+                {!isSidebarCollapsed && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.5 }}
+                  >
+                    <ChevronRight size={16} className="text-[#D4AF37]/40" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           </div>
 
-          <nav className="flex-1 overflow-y-auto px-4 space-y-2">
+          <nav className={`flex-1 overflow-y-auto px-4 space-y-2 ${isSidebarCollapsed ? 'px-2' : ''}`}>
             {navItems.filter(item => hasRole(item.allowedRoles)).map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -137,44 +169,72 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <motion.div
-                    whileHover={{ scale: 1.02, x: 5 }}
+                    whileHover={{ scale: 1.02, x: isSidebarCollapsed ? 0 : 5 }}
                     whileTap={{ scale: 0.98 }}
-                    className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${isActive
+                    className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${isSidebarCollapsed ? 'justify-center px-0' : ''} ${isActive
                       ? 'bg-[#D4AF37] text-[#1A1A1A] shadow-[0_20px_60px_rgba(212,175,55,0.4)]'
                       : 'text-[#A0A0A0] hover:bg-[#D4AF37]/5 hover:text-[#D4AF37]'
                       }`}
                   >
                     <Icon size={16} className={isActive ? 'text-[#1A1A1A]' : 'text-[#D4AF37]'} />
-                    {item.name}
+                    <AnimatePresence>
+                      {!isSidebarCollapsed && (
+                        <motion.span
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -10 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {item.name}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
                   </motion.div>
                 </NavLink>
               );
             })}
           </nav>
 
-          <div className="p-6 border-t border-[#D4AF37]/10 mt-auto">
+          <div className={`p-6 border-t border-[#D4AF37]/10 mt-auto ${isSidebarCollapsed ? 'p-2' : 'p-6'}`}>
             <motion.button
               whileHover={{ scale: 1.02 }}
               onClick={() => { logout(); navigate('/login'); }}
-              className="flex items-center gap-4 px-4 py-3 w-full text-[10px] font-black uppercase tracking-[0.2em] text-[#666666] hover:text-[#D4AF37] transition-colors"
+              className={`flex items-center gap-4 px-4 py-3 w-full text-[10px] font-black uppercase tracking-[0.2em] text-[#666666] hover:text-[#D4AF37] transition-colors ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
             >
               <LogOut size={18} className="text-[#D4AF37]/40" />
-              Sign Out
+              <AnimatePresence>
+                {!isSidebarCollapsed && (
+                  <motion.span
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    Sign Out
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </motion.button>
           </div>
         </aside>
       </>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
-        <header 
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        <header
           className="flex items-center justify-between px-4 md:px-8 h-16 md:h-24 shrink-0 border-b border-[#D4AF37]/10"
           style={{ backgroundColor: 'rgba(26, 26, 26, 0.8)', backdropFilter: 'blur(24px)' }}
         >
           <div className="flex items-center gap-2 md:gap-4">
             <button
-              className="md:hidden p-2 text-[#D4AF37] rounded-xl border border-[#D4AF37]/20"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 text-[#D4AF37] rounded-xl border border-[#D4AF37]/20 hover:bg-[#D4AF37]/10 transition-colors"
+              onClick={() => {
+                if (window.innerWidth >= 768) {
+                  setIsSidebarCollapsed(!isSidebarCollapsed);
+                } else {
+                  setIsMobileMenuOpen(!isMobileMenuOpen);
+                }
+              }}
             >
               <Menu size={20} />
             </button>
@@ -190,7 +250,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           <div className="flex items-center gap-3 md:gap-6">
             {user?.role === 'Admin' && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="hidden sm:flex items-center gap-2 px-4 py-1.5 bg-[#046307]/20 text-[#046307] border border-[#046307]/30 rounded-full text-[9px] font-black uppercase tracking-widest"

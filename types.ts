@@ -209,9 +209,19 @@ export interface Certificate {
   userId: string;
   courseId: string;
   issuedAt: string;
-  certificateUrl?: string;
+  /** Public URL of the stored PDF in Supabase storage. Null for legacy records or when PDF generation is not configured. */
+  certificateUrl: string | null;
   uniqueCode: string;
   quizAttemptId?: string;
+}
+
+/** Request body for the render-certificate-pdf edge function (internal use). */
+export interface RenderCertificateRequest {
+  recipientName: string;
+  courseName: string;
+  completionDate: string;
+  uniqueCode: string;
+  instructorName?: string;
 }
 
 // Quiz with Questions (for taking quiz)

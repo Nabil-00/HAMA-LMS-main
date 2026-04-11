@@ -103,11 +103,12 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
   }, []);
 
   // Auto-select first lesson if available and nothing selected (fallback)
+  // IMPORTANT: Do NOT trigger this when a quiz is intentionally active (activeQuizId is set)
   useEffect(() => {
-    if (!activeLessonId && course.modules.length > 0 && course.modules[0].lessons.length > 0) {
+    if (!activeLessonId && !activeQuizId && course.modules.length > 0 && course.modules[0].lessons.length > 0) {
       setActiveLessonId(course.modules[0].lessons[0].id);
     }
-  }, [course, activeLessonId]);
+  }, [course, activeLessonId, activeQuizId]);
 
   // Scroll to top when lesson or quiz changes
   useEffect(() => {

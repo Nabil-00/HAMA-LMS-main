@@ -40,7 +40,8 @@ const CertificateVerificationPage: React.FC = () => {
             uniqueCode: data.certificate.uniqueCode,
             issuedAt: data.certificate.issuedAt,
             userId: '',
-            courseId: ''
+            courseId: '',
+            certificateUrl: null
           },
           userName: data.certificate.userName,
           courseTitle: data.certificate.courseTitle

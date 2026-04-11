@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Award, Download, Share2, ShieldCheck, Calendar, User, X } from 'lucide-react';
+import { Award, Download, Share2, Calendar, X } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -8,6 +8,10 @@ interface CertificateProps {
     courseTitle: string;
     completionDate: string;
     certificateId: string;
+    /** URL of the server-generated PDF stored in Supabase storage.
+     *  When provided the download button links directly to this URL.
+     *  When null/undefined (legacy records) the client-side html2canvas fallback is used. */
+    certificateUrl?: string | null;
     onClose?: () => void;
 }
 
@@ -16,12 +20,34 @@ const CertificatePreview: React.FC<CertificateProps> = ({
     courseTitle,
     completionDate,
     certificateId,
+    certificateUrl,
     onClose
 }) => {
     const [isGenerating, setIsGenerating] = useState(false);
     const certificateRef = useRef<HTMLDivElement>(null);
 
     const handleDownload = async () => {
+        // If a server-generated PDF URL exists, download it directly.
+        // This avoids html2canvas entirely and produces a higher-quality PDF.
+        if (certificateUrl) {
+            const link = document.createElement('a');
+            link.href = certificateUrl;
+            link.download = `${studentName.replace(/\s+/g, '_')}_Certificate.pdf`;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            return;
+        }
+
+        // Legacy fallback: generate PDF client-side using html2canvas + jsPDF.
+        // This path is used for old certificate records that pre-date the server-side pipeline.
+        console.warn(
+            '[CertificatePreview] No server-generated PDF URL available — using client-side fallback. ' +
+            'Configure BROWSER_WS_ENDPOINT in Supabase secrets to enable server-side PDF generation.'
+        );
+
         if (!certificateRef.current) return;
         setIsGenerating(true);
         try {
@@ -50,6 +76,7 @@ const CertificatePreview: React.FC<CertificateProps> = ({
             setIsGenerating(false);
         }
     };
+
 
     const handleShare = () => {
         if (navigator.share) {

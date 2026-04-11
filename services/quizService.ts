@@ -146,18 +146,22 @@ export const quizService = {
       userId: data.user_id,
       courseId: data.course_id,
       issuedAt: data.issued_at,
-      certificateUrl: data.certificate_url,
+      // Always return string | null (never undefined) to match the updated interface
+      certificateUrl: data.certificate_url ?? null,
       uniqueCode: data.unique_code,
       quizAttemptId: data.quiz_attempt_id
     };
   },
 
-  // Generate certificate
+  // Generate certificate via the generate-certificate edge function.
+  // Returns certificateUrl with the public URL of the stored PDF, or null if PDF
+  // generation is not yet configured (BROWSER_WS_ENDPOINT / INTERNAL_SECRET missing).
   async generateCertificate(courseId: string, quizAttemptId?: string): Promise<{
     success: boolean;
     certificateId?: string;
     uniqueCode?: string;
-    htmlContent?: string;
+    /** Public URL of the server-generated PDF stored in Supabase storage. Null if not yet configured. */
+    certificateUrl?: string | null;
     error?: string;
   }> {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -180,8 +184,30 @@ export const quizService = {
     );
 
     const result = await response.json();
-    return result;
-  }
+    return {
+      success: result.success ?? false,
+      certificateId: result.certificateId,
+      uniqueCode: result.uniqueCode,
+      // Map the certificateUrl from the edge function response (may be null)
+      certificateUrl: result.certificateUrl ?? null,
+      error: result.error,
+    };
+  },
+
+  /**
+   * Trigger a browser download of a certificate PDF from a stored URL.
+   * This is a convenience wrapper used when the certificateUrl is already known.
+   */
+  downloadCertificate(certificateUrl: string, recipientName = 'Certificate'): void {
+    const link = document.createElement('a');
+    link.href = certificateUrl;
+    link.download = `${recipientName.replace(/\s+/g, '_')}_Certificate.pdf`;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  },
 };
 
 // Admin functions

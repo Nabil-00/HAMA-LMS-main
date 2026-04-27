@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, ShieldCheck, Globe } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from './icons/HamaUIIcons';
 import { useToast } from './Toast';
 import { useAuth } from '../contexts/AuthContext';
+import BrandLogo from './ui/BrandLogo';
+import { HamaCertificateIcon, HamaUserIcon } from './icons';
 
 const Login = () => {
    const navigate = useNavigate();
+   const location = useLocation();
    const { addToast } = useToast();
    const { user, isAuthenticated, login } = useAuth();
 
@@ -18,9 +21,20 @@ const Login = () => {
 
    React.useEffect(() => {
       if (isAuthenticated && !isLoading) {
-         navigate('/');
+         const params = new URLSearchParams(location.search);
+         const hashQuery = window.location.hash.includes('?')
+            ? window.location.hash.slice(window.location.hash.indexOf('?') + 1)
+            : window.location.hash.replace('#', '');
+         const hashParams = new URLSearchParams(hashQuery);
+         const redirectTo = params.get('redirect') || hashParams.get('redirect');
+
+         if (redirectTo && redirectTo.startsWith('/')) {
+            navigate(redirectTo, { replace: true });
+         } else {
+            navigate('/dashboard', { replace: true });
+         }
       }
-   }, [isAuthenticated, navigate, isLoading]);
+   }, [isAuthenticated, navigate, isLoading, location.search]);
 
    const handleLogin = async (e: React.FormEvent) => {
       e.preventDefault();
@@ -30,7 +44,6 @@ const Login = () => {
       try {
          await login(email, password);
          addToast('Barka da zuwa', 'success');
-         navigate('/');
       } catch (e: any) {
          setError('An ki ba da izini. Tabbatar da bayananka.');
          setIsLoading(false);
@@ -43,19 +56,52 @@ const Login = () => {
    };
 
    return (
-      <div className="min-h-screen w-full flex bg-[#1A1A1A] text-[#F5F5DC] selection:bg-[#D4AF37] selection:text-[#1A1A1A] overflow-hidden relative">
-         {/* Background Effects */}
-         <div className="noise" />
-         <motion.div
-            animate={{ scale: [1, 1.4, 1], rotate: [0, 90, 0] }}
-            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-[15%] -left-32 w-[30rem] h-[30rem] bg-[#046307] blur-[180px] rounded-full opacity-20 pointer-events-none"
-         />
-         <motion.div
-            animate={{ scale: [1, 1.2, 1], rotate: [0, -45, 0], y: [0, 100, 0] }}
-            transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute bottom-[20%] -right-32 w-[35rem] h-[35rem] bg-[#D4AF37] blur-[200px] rounded-full opacity-10 pointer-events-none"
-         />
+      <div
+         className="min-h-screen w-full flex text-[#F5F5DC] selection:bg-[#D4AF37] selection:text-[#1A1A1A] overflow-hidden relative"
+         style={{ background: 'linear-gradient(160deg, #1c1a0f 0%, #0e0d08 50%, #0a0a08 100%)' }}
+      >
+         <div
+            className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden"
+            style={{ zIndex: 0 }}
+         >
+            <div
+               style={{
+                  position: 'absolute',
+                  width: '420px',
+                  height: '420px',
+                  borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(212,175,55,0.13) 0%, rgba(212,175,55,0.04) 50%, transparent 80%)',
+               }}
+            />
+            <img
+               src="/hamonogram.png"
+               alt=""
+               style={{
+                  width: '320px',
+                  height: '320px',
+                  objectFit: 'contain',
+                  opacity: 0.1,
+                  filter: 'grayscale(30%) sepia(60%) hue-rotate(5deg) brightness(1.4)',
+                  userSelect: 'none',
+               }}
+            />
+         </div>
+
+         <div className="relative z-10 w-full flex">
+            {/* Background Effects */}
+            <div className="noise" />
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <motion.div
+               animate={{ scale: [1, 1.4, 1], rotate: [0, 90, 0] }}
+               transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+               className="absolute top-[15%] -left-28 h-[22rem] w-[22rem] md:-left-32 md:h-[30rem] md:w-[30rem] bg-[#046307] blur-[180px] rounded-full opacity-20"
+            />
+            <motion.div
+               animate={{ scale: [1, 1.2, 1], rotate: [0, -45, 0], y: [0, 100, 0] }}
+               transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+               className="absolute bottom-[20%] -right-28 h-[24rem] w-[24rem] md:-right-32 md:h-[35rem] md:w-[35rem] bg-[#D4AF37] blur-[200px] rounded-full opacity-10"
+            />
+            </div>
 
          {/* Left Side - Visual */}
          <motion.div 
@@ -64,10 +110,6 @@ const Login = () => {
             variants={itemVariants}
             className="hidden lg:flex w-1/2 relative overflow-hidden items-center justify-center p-20 border-r border-[#D4AF37]/10"
          >
-            <div 
-               className="absolute inset-0 bg-cover bg-center opacity-30 grayscale contrast-[1.2] brightness-[0.6]"
-               style={{ backgroundImage: "url('https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=1920&auto=format&fit=crop')" }}
-            />
             <div className="absolute inset-0 bg-gradient-to-b from-[#1A1A1A]/20 via-[#1A1A1A]/60 to-[#1A1A1A]" />
             <div className="absolute inset-0 bg-[#046307]/20 mix-blend-overlay" />
 
@@ -92,15 +134,15 @@ const Login = () => {
                 </motion.p>
 
                 <motion.div variants={itemVariants} className="grid grid-cols-2 gap-8 mt-16">
-                   <div className="flex items-center gap-4 text-[#666666]">
+                  <div className="flex items-center gap-4 text-[#666666]">
                       <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20">
-                         <ShieldCheck className="text-[#D4AF37]" size={20} />
+                         <HamaCertificateIcon size={20} variant="gold" aria-hidden />
                       </div>
                       <span className="text-[10px] font-black uppercase tracking-[0.3em]">Tabbatacce</span>
                    </div>
                    <div className="flex items-center gap-4 text-[#666666]">
                       <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20">
-                         <Globe className="text-[#D4AF37]" size={20} />
+                         <HamaUserIcon size={20} variant="gold" aria-hidden />
                       </div>
                       <span className="text-[10px] font-black uppercase tracking-[0.3em]">Duniya</span>
                    </div>
@@ -117,25 +159,29 @@ const Login = () => {
          >
             <div className="w-full max-w-md space-y-12">
                <div className="text-center space-y-8">
-                  <motion.div whileHover={{ scale: 1.05 }} className="relative inline-block cursor-pointer">
-                     <div className="absolute -inset-6 bg-gradient-to-tr from-[#046307] to-[#D4AF37] rounded-3xl opacity-20 blur-[60px]" />
-                     <div className="w-24 h-24 rounded-3xl bg-[#D4AF37] flex items-center justify-center relative shadow-[0_20px_60px_rgba(212,175,55,0.4)]">
-                        <span className="font-black text-5xl text-[#1A1A1A] tracking-tighter">H</span>
-                     </div>
-                  </motion.div>
+                  <div className="flex flex-col items-center mb-6">
+                     <BrandLogo
+                        variant="icon"
+                        size="lg"
+                        clickable
+                        href="/"
+                        alt="HAMA Monogram"
+                        className="brightness-150 contrast-110"
+                     />
+                  </div>
                   
-                   <div className="space-y-3">
-                      <h1 className="text-3xl font-black text-[#F5F5DC] uppercase tracking-[0.3em]">Shiga</h1>
-                      <p className="text-xs text-[#666666] font-black uppercase tracking-[0.4em] max-w-[280px] mx-auto">
-                         Shigar da bayananka
-                      </p>
-                   </div>
+                    <div className="space-y-3">
+                       <h1 className="text-3xl font-black text-[#D4AF37] uppercase tracking-[0.24em]">HAMA Academy</h1>
+                       <p className="text-xs text-[#A0A0A0] font-black uppercase tracking-[0.35em] max-w-[280px] mx-auto">
+                          Login
+                       </p>
+                    </div>
                </div>
 
                <form onSubmit={handleLogin} className="space-y-8">
                   <div className="space-y-6">
                       <div className="space-y-3">
-                         <label className="text-[10px] font-black text-[#666666] uppercase tracking-[0.3em] ml-1">Imel</label>
+                         <label className="text-[10px] font-black text-[#666666] uppercase tracking-[0.3em] ml-1">Email</label>
                          <div className="relative group">
                             <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-[#D4AF37]/40 group-focus-within:text-[#D4AF37] transition-colors" size={18} />
                             <input
@@ -150,7 +196,7 @@ const Login = () => {
                       </div>
 
                       <div className="space-y-3">
-                         <label className="text-[10px] font-black text-[#666666] uppercase tracking-[0.3em] ml-1">Kalmar sirri</label>
+                         <label className="text-[10px] font-black text-[#666666] uppercase tracking-[0.3em] ml-1">Password</label>
                         <div className="relative group">
                            <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-[#D4AF37]/40 group-focus-within:text-[#D4AF37] transition-colors" size={18} />
                            <input
@@ -223,6 +269,7 @@ const Login = () => {
             }
             `
          }} />
+         </div>
       </div>
    );
 };

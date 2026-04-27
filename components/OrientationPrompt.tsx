@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RotateCcw, Smartphone, X } from 'lucide-react';
+import { RotateCcw, Smartphone, X } from './icons/HamaUIIcons';
 
 const OrientationPrompt: React.FC = () => {
     const [isVisible, setIsVisible] = useState(false);
@@ -58,7 +58,7 @@ const OrientationPrompt: React.FC = () => {
                         Landscape View Ready
                     </h3>
                     <p className="text-sm text-text-secondary leading-relaxed font-sans">
-                        Rotate your device for a more immersive Course Studio experience.
+                        Rotate your device for a more immersive HAMA Academy learning experience.
                     </p>
                 </div>
 

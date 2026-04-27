@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Volume2, RotateCcw, Activity } from 'lucide-react';
+import { Play, Pause, Volume2, RotateCcw, Activity } from './icons/HamaUIIcons';
+import BrandLogo from './ui/BrandLogo';
 
 interface HeadlessYoutubePlayerProps {
     youtubeId: string;
@@ -117,7 +118,14 @@ const HeadlessYoutubePlayer: React.FC<HeadlessYoutubePlayerProps> = ({ youtubeId
                     <Activity className="w-32 h-32 text-hama-gold" />
                 </div>
 
-                <div className="relative z-10 p-6 md:p-12 flex flex-col md:flex-row items-center gap-6 md:gap-12">
+                {/* Brand Watermark - visible when controls are shown (paused/idle) */}
+                {!isPlaying && (
+                    <div className="absolute top-4 right-4 z-20 pointer-events-none opacity-[0.05]">
+                        <BrandLogo variant="watermark" size="sm" />
+                    </div>
+                )}
+
+                <div className="relative z-10 p-6 md:p-10 lg:p-12 flex flex-col md:flex-row items-center gap-6 md:gap-10 lg:gap-12 min-w-0">
                     {/* Thumbnail / Visualizer Circle */}
                     <div className="relative group/thumb">
                         <div className={`w-32 h-32 md:w-56 md:h-56 rounded-full overflow-hidden border-4 border-hama-gold/30 shadow-[0_0_50px_rgba(242,201,76,0.2)] transition-all duration-1000 ${isPlaying ? 'rotate-animation' : ''}`}>
@@ -141,15 +149,17 @@ const HeadlessYoutubePlayer: React.FC<HeadlessYoutubePlayerProps> = ({ youtubeId
                     </div>
 
                     {/* Controls Area */}
-                    <div className="flex-1 w-full space-y-4 md:space-y-8">
+                    <div className="flex-1 min-w-0 w-full space-y-4 md:space-y-8">
                         <div className="text-center md:text-left">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-hama-gold/10 border border-hama-gold/20 text-hama-gold text-[10px] font-black uppercase tracking-widest mb-4">
                                 Audiosonic Masterclass
                             </div>
-                            <h2 className="text-2xl md:text-5xl font-black text-text-primary serif leading-tight truncate">
+                            <h2 className="text-2xl md:text-4xl lg:text-5xl font-black text-text-primary serif leading-tight break-words [overflow-wrap:anywhere]">
                                 {title || 'YouTube Audio Stream'}
                             </h2>
-                            <p className="text-hama-gold/60 text-[10px] font-bold uppercase tracking-[0.4em] mt-2">Professional Grade DSP • Headless Engine</p>
+                            <p className="text-hama-gold/60 text-[9px] md:text-[10px] font-bold uppercase tracking-[0.25em] md:tracking-[0.35em] mt-2 break-words">
+                                Professional Grade DSP • Headless Engine
+                            </p>
                         </div>
 
                         {/* Scrubber */}
@@ -177,7 +187,7 @@ const HeadlessYoutubePlayer: React.FC<HeadlessYoutubePlayerProps> = ({ youtubeId
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex items-center justify-center md:justify-start gap-4 md:gap-8">
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 md:gap-6">
                             <button
                                 onClick={() => {
                                     if (isPlayerReady && typeof player?.seekTo === 'function') {
@@ -194,9 +204,9 @@ const HeadlessYoutubePlayer: React.FC<HeadlessYoutubePlayerProps> = ({ youtubeId
                             >
                                 {isPlaying ? <Pause size={24} className="md:w-8 md:h-8" /> : <Play size={24} className="ml-1 md:w-8 md:h-8" />}
                             </button>
-                            <div className="flex items-center gap-3 text-text-muted">
+                            <div className="flex items-center gap-3 text-text-muted min-w-0">
                                 <Volume2 size={18} className="md:w-5 md:h-5" />
-                                <div className="w-16 md:w-20 h-1 bg-white/5 rounded-full overflow-hidden">
+                                <div className="w-16 sm:w-20 h-1 bg-white/5 rounded-full overflow-hidden">
                                     <div className="w-2/3 h-full bg-hama-gold/40" />
                                 </div>
                             </div>

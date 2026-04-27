@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HelpCircle, CheckCircle2, AlertCircle, ArrowRight, RotateCcw, XCircle } from 'lucide-react';
+import { HelpCircle, CheckCircle2, AlertCircle, ArrowRight, RotateCcw, XCircle } from './icons/HamaUIIcons';
 
 interface Question {
     id: string;

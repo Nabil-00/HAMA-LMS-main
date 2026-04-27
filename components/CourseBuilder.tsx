@@ -34,7 +34,7 @@ import {
     Copy,
     ChevronUp,
     X
-} from 'lucide-react';
+} from './icons/HamaUIIcons';
 import TranslationManager from './TranslationManager';
 import { VideoEditor, AudioEditor, ImmersiveEditor, ScormEditor, EmbedEditor } from './ContentEditors';
 import QuizManagement from './QuizManagement';
@@ -948,7 +948,7 @@ const CourseBuilder: React.FC = () => {
                                                 </span>
                                             ))}
                                             <input
-                                                className="bg-transparent border-none outline-none text-[10px] font-black uppercase tracking-widest text-white/40 min-w-[200px]"
+                                                className="bg-transparent border-none outline-none text-[10px] font-black uppercase tracking-widest text-white/40 min-w-[120px] sm:min-w-[160px] flex-1"
                                                 placeholder="+ Add Tag..."
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') {

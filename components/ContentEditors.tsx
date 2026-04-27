@@ -17,7 +17,7 @@ import {
    Maximize,
    RefreshCw,
    Trash2
-} from 'lucide-react';
+} from './icons/HamaUIIcons';
 
 interface EditorProps {
    metadata: ContentMetadata;

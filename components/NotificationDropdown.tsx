@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Check, Trash2, Info, AlertTriangle, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { Bell, Check, Trash2, Info, AlertTriangle, MessageSquare, CheckCircle2 } from './icons/HamaUIIcons';
 import { formatDistanceToNow } from 'date-fns';
 import { Notification, NotificationType } from '../types';
 

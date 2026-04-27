@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "brand": "HAMA",
+    "sub_brand": "Academy",
+    "home": "Gida",
+    "courses": "Darussa",
+    "about": "Game da Mu",
+    "contact": "Tuntu\u0253a",
+    "browse_courses": "Bincika Darussa",
+    "start_learning": "Fara Koyo"
+  },
+  "hero": {
+    "eyebrow": "Dandamalin ilimi na Hausa",
+    "headline": "\u0198warewa ta gaske. Ilimi na zamani.",
+    "subheadline": "Koyi darussa masu amfani cikin sau\u0199i, da harshen Hausa.",
+    "cta_primary": "Fara Koyo",
+    "cta_secondary": "Bincika Darussa",
+    "card_1_label": "Catalog",
+    "card_1_value": "Darussa masu amfani",
+    "card_2_label": "Takarda",
+    "card_2_value": "Shaida mai nagarta",
+    "card_3_label": "Ci Gaba",
+    "card_3_value": "A hankali, amma tabbatacce",
+    "float_badge": "Hausa-first"
+  },
+  "social_proof": {
+    "item_1": "Darussa masu inganci",
+    "item_2": "Hausa-first",
+    "item_3": "Takardar kammalawa",
+    "item_4": "Kwarewa mai amfani"
+  },
+  "catalog": {
+    "eyebrow": "Catalog na Darussa",
+    "title": "Duba darussa da suka fi dacewa",
+    "description": "Za\u0253i darasi, fara nan take.",
+    "view_course": "Duba Darasi",
+    "open_course": "Bu\u0257e darasi",
+    "watch_preview": "Kalli Preview",
+    "play_preview": "Kunna preview na darasi",
+    "preview_modal_title": "Preview na darasi",
+    "close_preview": "Rufe preview",
+    "free": "Kyauta",
+    "fallback_description": "Ba a saka bayani ba tukuna.",
+    "browse_courses": "Bincika Darussa"
+  },
+  "value_1": {
+    "eyebrow": "Dalilin HAMA",
+    "title": "Koyo mai sau\u0199i, daidai da al'adarka",
+    "description": "Tsari mai kyau. Darussa masu amfani. Hausa mai sau\u0199in karantawa.",
+    "bullet_1": "Koyo mai inganci da mai maida hankali",
+    "bullet_2": "Modules masu tsari da darussa masu jagoranci",
+    "bullet_3": "Tsari mai saukin amfani ga masu koyo na gida"
+  },
+  "value_2": {
+    "eyebrow": "Gogewar Koyo",
+    "title": "Dandamali na zamani mai ingantaccen salo",
+    "description": "Salo daya da LMS: tsafta, tsari, da kwarewar amfani mai dadi."
+  },
+  "value_visual": {
+    "progress_title": "Ci gaban darasi",
+    "certificate_title": "Nunin takardar shaida",
+    "certificate_desc": "Tsarin shaidar kammalawa mai nagarta",
+    "completion_title": "Kammala darasi",
+    "completion_desc": "Ci gaba a matakai, module zuwa module"
+  },
+  "features": {
+    "eyebrow": "Abubuwan Dandamali",
+    "title": "Abin da mai koyo ke bu\u0199ata a wuri guda",
+    "item_1_title": "Hanyoyin Koyo Masu Tsari",
+    "item_1_desc": "Modules da jagorancin darasi masu fayyace hanya.",
+    "item_2_title": "Takardun Shaidar Kammalawa",
+    "item_2_desc": "Girmama ci gaba da takardar shaida mai kyau.",
+    "item_3_title": "Gogewar Darasi Mai Mu'amala",
+    "item_3_desc": "Darussa masu nutsuwa don fahimta da ci gaba.",
+    "item_4_title": "Saukin Samun Darussa",
+    "item_4_desc": "Bincika, yi rajista, sannan ka ci gaba da koyo cikin sauki."
+  },
+  "cta": {
+    "title": "Fara koyonka tare da HAMA",
+    "description": "Bincika catalog, zabi darasi, ka fara yanzu.",
+    "primary": "Fara Koyo",
+    "secondary": "Bincika Darussa"
+  },
+  "footer": {
+    "subtitle": "Dandamalin koyo na dijital mai inganci",
+    "platform": "Dandamali",
+    "account": "Asusu",
+    "courses": "Darussa",
+    "about": "Game da Mu",
+    "contact": "Tuntu\u0253a",
+    "login": "Shiga",
+    "get_started": "Fara Yanzu",
+    "copyright": "\u00a9 HAMA. Dukkan hakkoki na kare."
+  },
+  "language": {
+    "ha": "HA",
+    "en": "EN"
+  }
+}

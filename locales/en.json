@@ -1,0 +1,99 @@
+{
+  "nav": {
+    "brand": "HAMA",
+    "sub_brand": "Academy",
+    "home": "Home",
+    "courses": "Courses",
+    "about": "About",
+    "contact": "Contact",
+    "browse_courses": "Browse Courses",
+    "start_learning": "Start Learning"
+  },
+  "hero": {
+    "eyebrow": "Hausa-focused digital learning platform",
+    "headline": "Real skills. Modern learning.",
+    "subheadline": "Learn practical courses with clarity, speed, and Hausa-first accessibility.",
+    "cta_primary": "Start Learning",
+    "cta_secondary": "Browse Courses",
+    "card_1_label": "Catalog",
+    "card_1_value": "Practical course tracks",
+    "card_2_label": "Certificate",
+    "card_2_value": "Polished completion proof",
+    "card_3_label": "Momentum",
+    "card_3_value": "Steady progress, lesson by lesson",
+    "float_badge": "Hausa-first"
+  },
+  "social_proof": {
+    "item_1": "Premium learning flow",
+    "item_2": "Hausa-first accessibility",
+    "item_3": "Certificate-ready",
+    "item_4": "Practical skill growth"
+  },
+  "catalog": {
+    "eyebrow": "Course Catalog",
+    "title": "Explore courses that move you forward",
+    "description": "Pick a course and start immediately.",
+    "view_course": "View Course",
+    "open_course": "Open course",
+    "watch_preview": "Watch Preview",
+    "play_preview": "Play course preview",
+    "preview_modal_title": "Course preview",
+    "close_preview": "Close preview",
+    "free": "Free",
+    "fallback_description": "No description yet.",
+    "browse_courses": "Browse Courses"
+  },
+  "value_1": {
+    "eyebrow": "Why HAMA",
+    "title": "Built for accessible, culturally grounded learning",
+    "description": "Clean structure, practical lessons, and clear Hausa-first delivery.",
+    "bullet_1": "Premium and focused learning experience",
+    "bullet_2": "Structured modules and guided lessons",
+    "bullet_3": "Accessible design for local learners"
+  },
+  "value_2": {
+    "eyebrow": "Learning Experience",
+    "title": "A modern course platform with a premium feel",
+    "description": "The landing page hints at LMS sophistication by reusing familiar surfaces, borders, glow, and content card patterns."
+  },
+  "value_visual": {
+    "progress_title": "Course progress",
+    "certificate_title": "Certificate preview",
+    "certificate_desc": "Completion-ready credential format",
+    "completion_title": "Lesson completion",
+    "completion_desc": "Guided module-by-module progression"
+  },
+  "features": {
+    "eyebrow": "Platform Features",
+    "title": "Everything learners need in one place",
+    "item_1_title": "Structured Learning Paths",
+    "item_1_desc": "Clear modules and guided lesson flow for focused learning.",
+    "item_2_title": "Certificates of Completion",
+    "item_2_desc": "Recognize progress with polished completion certificates.",
+    "item_3_title": "Interactive Course Experience",
+    "item_3_desc": "Immersive lessons designed for clarity and momentum.",
+    "item_4_title": "Flexible Course Access",
+    "item_4_desc": "Browse, enroll, and continue learning with ease."
+  },
+  "cta": {
+    "title": "Start learning with HAMA",
+    "description": "Browse the catalog, discover your next course, and begin learning with purpose.",
+    "primary": "Start Learning",
+    "secondary": "Browse Courses"
+  },
+  "footer": {
+    "subtitle": "Premium digital learning platform",
+    "platform": "Platform",
+    "account": "Account",
+    "courses": "Courses",
+    "about": "About",
+    "contact": "Contact",
+    "login": "Login",
+    "get_started": "Get Started",
+    "copyright": "\u00a9 HAMA. All rights reserved."
+  },
+  "language": {
+    "ha": "HA",
+    "en": "EN"
+  }
+}

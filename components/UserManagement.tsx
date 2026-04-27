@@ -10,7 +10,7 @@ import {
     XCircle,
     CheckCircle,
     Lock
-} from 'lucide-react';
+} from './icons/HamaUIIcons';
 import { User as UserProfile, UserRole, UserStatus, Course, Enrollment } from '../types';
 import { getUsers, saveUser, createUser, getUserEnrollments, enrollUser, unenrollUser } from '../services/userService';
 import { getCourses } from '../services/courseService';
@@ -145,7 +145,7 @@ const EnrollmentModal = ({ user, onClose }: { user: UserProfile, onClose: () => 
                             <GraduationCap className="w-[18px] h-[18px] md:w-[20px] md:h-[20px]" />
                         </div>
                         <div>
-                            <h3 className="text-lg md:text-xl font-bold text-hama-gold serif italic">Studio Enrollment</h3>
+                            <h3 className="text-lg md:text-xl font-bold text-hama-gold serif italic">Academy Enrollment</h3>
                             <p className="text-[8px] md:text-[9px] text-text-muted uppercase tracking-[0.2em] font-black mt-1 underline decoration-hama-gold/30 underline-offset-4 truncate max-w-[150px] sm:max-w-none">{user?.name} — Status</p>
                         </div>
                     </div>
@@ -269,7 +269,7 @@ const UserManagement: React.FC = () => {
                         Staff List
                     </div>
                     <h1 className="text-4xl md:text-5xl font-bold serif text-text-primary">Users & Staff</h1>
-                    <p className="text-text-secondary mt-4 max-w-lg leading-relaxed font-light">Manage Academy personnel, instructor assignments, and student enrollments for HAMA Studio.</p>
+                    <p className="text-text-secondary mt-4 max-w-lg leading-relaxed font-light">Manage Academy personnel, instructor assignments, and student enrollments for HAMA Academy.</p>
                 </div>
 
                 <div className="flex items-center gap-4">

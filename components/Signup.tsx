@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, AlertCircle } from './icons/HamaUIIcons';
 import { useToast } from './Toast';
 import { useAuth } from '../contexts/AuthContext';
+import BrandLogo from './ui/BrandLogo';
+import { HamaCertificateIcon } from './icons';
 
 const Signup = () => {
     const navigate = useNavigate();
@@ -19,7 +21,7 @@ const Signup = () => {
 
     React.useEffect(() => {
         if (isAuthenticated && !isLoading) {
-            navigate('/');
+            navigate('/dashboard');
         }
     }, [isAuthenticated, navigate, isLoading]);
 
@@ -36,7 +38,7 @@ const Signup = () => {
                 navigate('/login');
             } else {
                 addToast('Barka da zuwa!', 'success');
-                navigate('/');
+                navigate('/dashboard');
             }
         } catch (e: any) {
             setError(e.message || 'Rijiya ta ki yi. Sake gwadawa.');
@@ -54,16 +56,18 @@ const Signup = () => {
         <div className="min-h-screen w-full flex bg-[#1A1A1A] text-[#F5F5DC] selection:bg-[#D4AF37] selection:text-[#1A1A1A] overflow-hidden relative">
             {/* Background Effects */}
             <div className="noise" />
-            <motion.div
-                animate={{ scale: [1, 1.4, 1], rotate: [0, 90, 0] }}
-                transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute top-[15%] -left-32 w-[30rem] h-[30rem] bg-[#046307] blur-[180px] rounded-full opacity-20 pointer-events-none"
-            />
-            <motion.div
-                animate={{ scale: [1, 1.2, 1], rotate: [0, -45, 0], y: [0, 100, 0] }}
-                transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute bottom-[20%] -right-32 w-[35rem] h-[35rem] bg-[#D4AF37] blur-[200px] rounded-full opacity-10 pointer-events-none"
-            />
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <motion.div
+                    animate={{ scale: [1, 1.4, 1], rotate: [0, 90, 0] }}
+                    transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute top-[15%] -left-28 h-[22rem] w-[22rem] md:-left-32 md:h-[30rem] md:w-[30rem] bg-[#046307] blur-[180px] rounded-full opacity-20"
+                />
+                <motion.div
+                    animate={{ scale: [1, 1.2, 1], rotate: [0, -45, 0], y: [0, 100, 0] }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute bottom-[20%] -right-28 h-[24rem] w-[24rem] md:-right-32 md:h-[35rem] md:w-[35rem] bg-[#D4AF37] blur-[200px] rounded-full opacity-10"
+                />
+            </div>
 
             {/* Left Side - Visual */}
             <motion.div 
@@ -102,7 +106,7 @@ const Signup = () => {
                     <motion.div variants={itemVariants} className="flex justify-center gap-16 mt-16">
                         <div className="flex flex-col items-center gap-3">
                             <div className="w-16 h-16 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20">
-                                <ShieldCheck className="text-[#D4AF37]" size={28} />
+                                <HamaCertificateIcon size={28} variant="gold" aria-hidden />
                             </div>
                             <span className="text-[9px] font-black uppercase tracking-[0.3em] text-[#666666]">Tabbatacce</span>
                         </div>
@@ -119,12 +123,16 @@ const Signup = () => {
             >
                 <div className="w-full max-w-md space-y-10">
                     <div className="text-center space-y-6">
-                        <motion.div whileHover={{ scale: 1.05 }} className="relative inline-block cursor-pointer">
-                            <div className="absolute -inset-6 bg-gradient-to-tr from-[#046307] to-[#D4AF37] rounded-3xl opacity-20 blur-[60px]" />
-                            <div className="w-20 h-20 rounded-3xl bg-[#D4AF37] flex items-center justify-center relative shadow-[0_20px_60px_rgba(212,175,55,0.4)]">
-                                <span className="font-black text-4xl text-[#1A1A1A] tracking-tighter">H</span>
-                            </div>
-                        </motion.div>
+                        <div className="flex flex-col items-center mb-6">
+                            <BrandLogo
+                                variant="full"
+                                size="lg"
+                                plate
+                                clickable
+                                href="/"
+                                alt="HAMA Academy"
+                            />
+                        </div>
                         
                         <div className="space-y-2">
                             <h1 className="text-2xl font-black text-[#F5F5DC] uppercase tracking-[0.3em]">Yi Rijista</h1>

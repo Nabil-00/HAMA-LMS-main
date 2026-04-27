@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Course, Module, Lesson, ContentType, Quiz } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { getCourses, deleteCourse } from '../services/courseService';
-import { adminQuizService, quizService } from '../services/quizService';
+import { adminQuizService } from '../services/quizService';
 import { progressService, CourseProgress } from '../services/progressService';
-import { getUserEnrollments, enrollUser, createPayment, verifyPayment, getPaymentByReference } from '../services/userService';
+import { getUserEnrollments } from '../services/userService';
+import { initializePayment, markPaymentFailedServer, verifyPaymentServer } from '../services/paymentService';
 import { initializePaystack, loadPaystackScript } from '../services/paystackService';
 import {
   Search,
@@ -32,7 +33,7 @@ import {
   Lock,
   Volume2,
   Trash2
-} from 'lucide-react';
+} from './icons/HamaUIIcons';
 import HeadlessYoutubePlayer from './HeadlessYoutubePlayer';
 import VideoPlayer from './VideoPlayer';
 import QuizPlayer from './QuizPlayer';
@@ -215,15 +216,15 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
               title={lesson.title}
             />
           ) : lesson.metadata.streamUrl ? (
-            <div className="glass rounded-2xl md:rounded-[3rem] p-6 md:p-12 border border-hama-gold/10 flex flex-col md:flex-row items-center gap-6 md:gap-12 relative overflow-hidden">
+            <div className="glass rounded-2xl md:rounded-[3rem] p-6 md:p-10 lg:p-12 border border-hama-gold/10 flex flex-col md:flex-row items-center gap-6 md:gap-8 lg:gap-12 relative overflow-hidden min-w-0">
               <div className="w-32 h-32 md:w-48 md:h-48 bg-hama-gold/5 rounded-2xl md:rounded-3xl flex items-center justify-center border border-hama-gold/10 relative z-10 shrink-0">
                 <Mic className="w-12 h-12 md:w-16 md:h-16 text-hama-gold" />
               </div>
-              <div className="flex-1 space-y-4 md:space-y-6 relative z-10 text-center md:text-left w-full">
+              <div className="flex-1 min-w-0 space-y-4 md:space-y-6 relative z-10 text-center md:text-left w-full">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-hama-gold/10 border border-hama-gold/20 text-hama-gold text-[9px] font-black uppercase tracking-widest">
                   Audio Distribution
                 </div>
-                <h1 className="text-2xl md:text-5xl font-black text-text-primary serif leading-tight">{lesson.title}</h1>
+                <h1 className="text-2xl md:text-4xl lg:text-5xl font-black text-text-primary serif leading-tight break-words [overflow-wrap:anywhere]">{lesson.title}</h1>
                 <audio
                   src={lesson.metadata.streamUrl}
                   controls
@@ -259,7 +260,7 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
             <p className="text-text-secondary font-light">Complete this assessment to progress in the course.</p>
           </div>
           {lesson.metadata.quizId ? (
-            <QuizPlayer quizId={lesson.metadata.quizId} courseId={course.id} />
+            <QuizPlayer quizId={lesson.metadata.quizId} courseId={course.id} courseName={course.title} />
           ) : (
             <div className="p-10 text-center glass rounded-2xl border border-dashed border-white/10">
               <p className="text-text-muted font-black uppercase tracking-widest text-[10px]">No Quiz Associated with this Assessment</p>
@@ -302,31 +303,33 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
     <div className="absolute inset-0 z-[100] bg-bg-primary flex flex-col animate-in slide-in-from-bottom-8 duration-500 overflow-hidden text-text-primary selection:bg-hama-gold selection:text-black backdrop-blur-3xl">
       {/* Background visual layers */}
       <div className="noise" />
-      <div className="aura" style={{ top: '-10%', right: '-10%' }} />
-      <div className="aura" style={{ bottom: '-10%', left: '-10%', background: 'radial-gradient(circle, rgba(242, 201, 76, 0.05) 0%, transparent 70%)' }} />
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-24 -right-24 h-64 w-64 md:-top-40 md:-right-40 md:h-96 md:w-96 rounded-full blur-[100px] bg-[radial-gradient(circle,rgba(242,201,76,0.08)_0%,transparent_70%)]" />
+        <div className="absolute -bottom-24 -left-24 h-64 w-64 md:-bottom-40 md:-left-40 md:h-96 md:w-96 rounded-full blur-[100px] bg-[radial-gradient(circle,rgba(242,201,76,0.05)_0%,transparent_70%)]" />
+      </div>
 
       {/* Viewer Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between px-4 md:px-8 py-4 md:py-6 glass shrink-0 z-20 md:z-30 border-b border-hama-gold/10 gap-4">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-6 min-w-0 flex-1">
           <button
             onClick={onClose}
             className="p-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-hama-gold hover:text-black transition-all text-hama-gold"
           >
             <ArrowLeft size={24} />
           </button>
-          <div>
+          <div className="min-w-0">
             <h3 className="text-lg md:text-4xl font-bold text-hama-gold serif italic truncate">
               {course.title}
             </h3>
-            <p className="text-[8px] md:text-[10px] text-text-muted flex items-center gap-2 md:gap-4 font-black uppercase tracking-[0.2em] mt-1">
-              <span className="flex items-center gap-1 md:gap-2"><User size={10} className="text-hama-gold" /> {course.author || 'Unknown Author'}</span>
+            <p className="text-[8px] md:text-[10px] text-text-muted flex items-center gap-2 md:gap-4 font-black uppercase tracking-[0.2em] mt-1 min-w-0">
+              <span className="flex items-center gap-1 md:gap-2 truncate"><User size={10} className="text-hama-gold shrink-0" /> {course.author || 'Unknown Author'}</span>
               <span className="w-1 h-1 md:w-1.5 md:h-1.5 bg-white/10 rounded-full"></span>
-              <span className="text-hama-gold">HAMA Studio</span>
+              <span className="text-hama-gold">HAMA Academy</span>
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-6 shrink-0">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="hidden md:flex items-center gap-3 px-5 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary hover:text-hama-gold transition-colors bento-card bg-transparent border-hama-gold/10"
@@ -359,7 +362,7 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
       </div>
 
       {/* Viewer Body */}
-      <div className="flex flex-1 overflow-hidden relative z-10">
+      <div className="flex flex-1 min-w-0 overflow-hidden relative z-10">
         {/* Desktop Progress Chip */}
         <div className="hidden md:block fixed top-4 right-4 z-50 bg-black/70 backdrop-blur px-3 py-1.5 rounded-full text-[11px] text-white shadow-md md:top-20 md:right-8">
           <div className="flex items-center gap-2">
@@ -484,7 +487,7 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
         )}
 
         {/* Main Content Area */}
-        <div ref={contentRef} className="flex-1 overflow-y-auto p-4 md:p-16 lg:p-24 scroll-smooth bg-transparent">
+        <div ref={contentRef} className="flex-1 min-w-0 overflow-y-auto p-4 md:p-10 lg:p-14 xl:p-20 scroll-smooth bg-transparent">
           {activeLesson ? (
             <div className="pb-12 md:pb-32">
               {renderLessonContent(activeLesson)}
@@ -510,7 +513,7 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
                   >
                     <div className="flex flex-col items-end relative z-10">
                       <span className="text-[10px] font-black text-hama-gold/40 uppercase tracking-[0.4em] mb-2">Next</span>
-                      <span className="text-xl font-bold text-text-primary serif group-hover:text-hama-gold transition-colors">{nextLesson.title}</span>
+                      <span className="text-xl font-bold text-text-primary serif group-hover:text-hama-gold transition-colors max-w-full break-words [overflow-wrap:anywhere]">{nextLesson.title}</span>
                     </div>
                     <div className="w-14 h-14 rounded-2xl bg-hama-gold/10 border border-hama-gold/20 flex items-center justify-center text-hama-gold group-hover:bg-hama-gold group-hover:text-black transition-all relative z-10">
                       <ChevronRight size={24} />
@@ -574,7 +577,7 @@ const CourseViewerModal = ({ course, onClose }: { course: Course; onClose: () =>
             </div>
           ) : activeQuizId ? (
             <div className="max-w-4xl mx-auto py-10 md:py-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <QuizPlayer quizId={activeQuizId} courseId={course.id} />
+              <QuizPlayer quizId={activeQuizId} courseId={course.id} courseName={course.title} />
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto">
@@ -657,56 +660,56 @@ const CourseList: React.FC = () => {
       return;
     }
 
-    // 4. Trigger Paystack
+    // 4. Trigger Paystack (backend initialized)
     const publicKey = (import.meta as any).env.VITE_PAYSTACK_PUBLIC_KEY;
     if (!publicKey || publicKey === 'pk_test_placeholder') {
       alert("Payment system is being configured. Please contact admin.");
       return;
     }
 
-    // Generate a unique reference for this payment
-    const paymentReference = `HAMA_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
     setIsProcessingPayment(true);
 
-    // Create payment record first
     try {
-      await createPayment(user!.id, course.id, course.price, paymentReference);
-    } catch (e) {
-      console.error("Failed to create payment record:", e);
-      // Continue anyway - we'll verify on callback
-    }
+      const initialized = await initializePayment(course.id);
 
-    initializePaystack({
-      key: publicKey,
-      email: user?.email || '',
-      amount: course.price,
-      metadata: {
-        courseId: course.id,
-        userId: user?.id || '',
-        reference: paymentReference
-      },
-      onSuccess: async (res) => {
-        try {
-          // Verify payment and enroll
-          const result = await verifyPayment(paymentReference, res);
-          if (result) {
-            await loadEnrollments();
-            setSelectedCourse(course);
-          } else {
+      initializePaystack({
+        key: publicKey,
+        email: initialized.email,
+        amount: initialized.amount,
+        reference: initialized.reference,
+        currency: initialized.currency,
+        metadata: initialized.metadata,
+        onSuccess: async (res) => {
+          try {
+            const result = await verifyPaymentServer(initialized.reference, res.reference);
+            if (result.success && result.enrolled) {
+              await loadEnrollments();
+              setSelectedCourse(course);
+            } else {
+              alert(result.message || "Payment verification failed. Please contact support.");
+            }
+          } catch (e) {
+            console.error("Payment verification failed", e);
             alert("Payment verification failed. Please contact support.");
+          } finally {
+            setIsProcessingPayment(false);
           }
-        } catch (e) {
-          console.error("Enrollment failed", e);
-          alert("Enrollment failed. Please contact support.");
-        } finally {
-          setIsProcessingPayment(false);
+        },
+        onCancel: async () => {
+          try {
+            await markPaymentFailedServer(initialized.reference, 'checkout_cancelled');
+          } catch (error) {
+            console.error('Could not mark payment as failed:', error);
+          } finally {
+            setIsProcessingPayment(false);
+          }
         }
-      },
-      onCancel: () => {
-        setIsProcessingPayment(false);
-      }
-    });
+      });
+    } catch (error) {
+      console.error('Failed to initialize payment:', error);
+      alert('Unable to start payment right now. Please try again.');
+      setIsProcessingPayment(false);
+    }
   };
 
   const filteredCourses = courses.filter((c: Course) =>

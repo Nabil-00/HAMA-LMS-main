@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, CheckCircle, XCircle, Award, Clock, ArrowRight, RotateCcw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, XCircle, Clock, ArrowRight, RotateCcw } from './icons/HamaUIIcons';
 import { useQuiz } from '../hooks/useQuiz';
+import { useAuth } from '../contexts/AuthContext';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface QuizPlayerProps {
   quizId: string;
   courseId: string;
+  courseName?: string;
   onComplete?: (passed: boolean, score: number) => void;
   onCertificateGenerated?: () => void;
 }
@@ -13,9 +17,11 @@ interface QuizPlayerProps {
 const QuizPlayer: React.FC<QuizPlayerProps> = ({
   quizId,
   courseId,
+  courseName,
   onComplete,
   onCertificateGenerated
 }) => {
+  const { user } = useAuth();
   const {
     quiz,
     loading,
@@ -38,6 +44,9 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
   } = useQuiz();
 
   const [showResult, setShowResult] = useState(false);
+  const [certificateNameInput, setCertificateNameInput] = useState('');
+  const [isCertificateNameConfirmed, setIsCertificateNameConfirmed] = useState(false);
+  const certificateRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadQuiz(quizId);
@@ -48,13 +57,39 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
   useEffect(() => {
     if (submitted && result) {
       setShowResult(true);
+      if (result.passed) {
+        setCertificateNameInput(user?.name?.trim() || '');
+        setIsCertificateNameConfirmed(false);
+      }
       onComplete?.(result.passed, result.score);
     }
-  }, [submitted, result]);
+  }, [submitted, result, user?.name]);
 
   const handleGenerateCertificate = async () => {
     await generateCertificate(courseId);
     onCertificateGenerated?.();
+  };
+
+  const handleDownloadCertificate = async () => {
+    const el = certificateRef.current;
+    if (!el) return;
+    try {
+      const canvas = await html2canvas(el, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: '#0f0f0f',
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'px',
+        format: [canvas.width / 3, canvas.height / 3],
+      });
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 3, canvas.height / 3);
+      pdf.save(`HAMA-Certificate-${certificate?.uniqueCode ?? 'download'}.pdf`);
+    } catch (err) {
+      console.error('Certificate download failed:', err);
+    }
   };
 
   if (loading && !quiz) {
@@ -81,105 +116,201 @@ const QuizPlayer: React.FC<QuizPlayerProps> = ({
   const progress = ((currentQuestionIndex + 1) / quiz.questions.length) * 100;
   const answeredCount = Object.keys(selectedAnswers).length;
   const isLastQuestion = currentQuestionIndex === quiz.questions.length - 1;
-  const hasAnsweredCurrent = !!selectedAnswers[currentQuestion?.id];
+  const learnerName = certificateNameInput.trim();
+  const certificateCourseName = (courseName || quiz.title || 'Course').trim();
+  const certificateDate = new Date(certificate?.issuedAt || Date.now()).toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric'
+  });
 
   // Result Screen
   if (showResult && result) {
+    if (!result.passed) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card p-8 max-w-2xl mx-auto text-center border-t-4 border-red-500/50"
+        >
+          <div className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center bg-red-500/20">
+            <XCircle className="w-10 h-10 text-red-400" />
+          </div>
+          <h2 className="text-3xl font-bold text-[#F5F5DC] mb-2 serif">Try Again</h2>
+          <p className="text-[#A0A0A0] mb-8 font-sans">
+            You have not met the required mark yet. Review the lesson and retake the quiz.
+          </p>
+          <button
+            onClick={() => {
+              reset();
+              loadQuiz(quizId);
+              setShowResult(false);
+              setCertificateNameInput('');
+              setIsCertificateNameConfirmed(false);
+            }}
+            className="text-[#A0A0A0] hover:text-[#D4AF37] flex items-center justify-center gap-2 mx-auto text-sm font-medium transition-colors"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Take Quiz Again
+          </button>
+        </motion.div>
+      );
+    }
+
+    if (!isCertificateNameConfirmed) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-3xl mx-auto"
+        >
+          <div className="glass-card border border-[#D4AF37]/30 bg-gradient-to-b from-[#171717] to-[#101010] px-8 py-10 md:px-12 md:py-12 text-center">
+            <p className="text-[10px] md:text-xs tracking-[0.4em] text-[#D4AF37] uppercase font-black">HAMA ACADEMY</p>
+            <h2 className="mt-4 text-2xl md:text-3xl font-black text-[#F5F5DC] uppercase tracking-[0.12em]">Certificate Name</h2>
+            <p className="mt-4 text-sm text-[#A0A0A0] max-w-xl mx-auto">
+              Enter your name exactly as you want it to appear on your certificate.
+            </p>
+
+            <form
+              className="mt-8 max-w-xl mx-auto"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!certificateNameInput.trim()) return;
+                setIsCertificateNameConfirmed(true);
+              }}
+            >
+              <label htmlFor="certificate-name" className="sr-only">Certificate name</label>
+              <input
+                id="certificate-name"
+                type="text"
+                value={certificateNameInput}
+                onChange={(event) => setCertificateNameInput(event.target.value)}
+                placeholder="Enter your full name"
+                maxLength={60}
+                className="w-full rounded-xl border border-[#D4AF37]/30 bg-black/30 px-4 py-3 text-center text-lg text-[#F5F5DC] placeholder:text-[#6f6f6f] focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/50"
+              />
+              <p className="mt-2 text-xs text-[#A0A0A0]">{certificateNameInput.length}/60 characters</p>
+
+              <button
+                type="submit"
+                disabled={!certificateNameInput.trim()}
+                className="mt-6 px-8 py-3 bg-[#D4AF37] text-[#1A1A1A] rounded-xl font-bold text-sm uppercase tracking-wider hover:scale-[1.01] transition-transform disabled:opacity-50"
+              >
+                Continue to Certificate
+              </button>
+            </form>
+          </div>
+        </motion.div>
+      );
+    }
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-card p-8 max-w-2xl mx-auto text-center border-t-4 border-[#D4AF37]"
+        className="max-w-5xl mx-auto"
       >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", damping: 12, stiffness: 200 }}
-          className={`w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center ${result.passed
-              ? 'bg-gradient-to-br from-[#D4AF37] to-[#B8860B] shadow-[0_0_30px_rgba(212,175,55,0.4)]'
-              : 'bg-red-500/20'
-            }`}
+        <div
+          ref={certificateRef}
+          className="relative border border-[#D4AF37]/30 rounded-xl px-8 py-12 md:px-16 md:py-16 text-center overflow-hidden"
+          style={{ background: 'linear-gradient(145deg, #1a1600 0%, #0f0f0f 40%, #1a1400 100%)' }}
         >
-          {result.passed ? (
-            <Award className="w-12 h-12 text-[#1A1A1A]" />
-          ) : (
-            <XCircle className="w-12 h-12 text-red-500" />
-          )}
-        </motion.div>
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 50%, transparent 100%)',
+              borderRadius: 'inherit',
+              zIndex: 0,
+            }}
+          />
+          <div
+            className="absolute top-0 left-0 right-0 pointer-events-none"
+            style={{
+              height: '1.5px',
+              background: 'linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.7) 30%, rgba(255,255,255,0.9) 50%, rgba(212,175,55,0.7) 70%, transparent 100%)',
+              zIndex: 1,
+            }}
+          />
 
-        <h2 className="text-3xl font-bold text-[#F5F5DC] mb-2 serif italic">
-          {result.passed ? 'Abun Alfahari!' : 'Kada Ka Karaya!'}
-        </h2>
+          <div className="relative z-10">
+            <section>
+              <p className="text-[10px] md:text-xs tracking-[0.45em] text-[#D4AF37] uppercase font-black">HAMA ACADEMY</p>
+              <h2 className="mt-3 text-2xl md:text-4xl font-black text-[#F5F5DC] tracking-[0.18em] uppercase">Certificate of Completion</h2>
+            </section>
 
-        <p className="text-[#A0A0A0] mb-8 font-sans">
-          {result.passed
-            ? 'Kun yi nasara a wannan gwajin cikin nasara'
-            : 'Ba ku samu nasara ba a wannan karon. Kada ku karaya!'
-          }
-        </p>
+            <section className="mt-14 md:mt-16 space-y-6 md:space-y-8">
+              <p className="text-[10px] md:text-xs tracking-[0.35em] text-[#A0A0A0] uppercase font-bold">This is to certify that</p>
+              <p className="text-3xl md:text-5xl text-[#F5F5DC] font-black serif break-words">{learnerName}</p>
+              <p className="text-sm md:text-base text-[#A0A0A0]">successfully completed the course</p>
+              <p className="text-xl md:text-3xl text-[#D4AF37] font-bold serif break-words">{certificateCourseName}</p>
+            </section>
 
-        <motion.div
-          variants={{
-            hidden: { opacity: 0 },
-            show: {
-              opacity: 1,
-              transition: { staggerChildren: 0.1 }
-            }
-          }}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-3 gap-4 mb-8"
-        >
-          {[
-            { label: 'Your Score', value: `${result.score}%`, color: '#D4AF37' },
-            { label: 'Correct', value: `${result.correctCount}/${result.totalQuestions}`, color: '#F5F5DC' },
-            { label: 'Required', value: `${quiz.passPercentage}%`, color: '#F5F5DC' }
-          ].map((item, idx) => (
-            <motion.div
-              key={idx}
-              variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
-              className="glass-dark p-4 rounded-xl border border-white/5"
-            >
-              <div className="text-2xl font-bold" style={{ color: item.color }}>{item.value}</div>
-              <div className="text-[10px] uppercase tracking-widest text-[#A0A0A0] mt-1">{item.label}</div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {result.passed && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="mb-6"
-          >
-            {certificate ? (
-              <div className="glass-dark p-6 rounded-xl border border-[#D4AF37]/30 bg-gradient-to-br from-[#D4AF37]/5 to-transparent">
-                <p className="text-[10px] uppercase tracking-widest text-[#A0A0A0] mb-2">Verification Code</p>
-                <p className="text-[#D4AF37] font-mono text-xl tracking-wider">{certificate.uniqueCode}</p>
-                <div className="h-px bg-[#D4AF37]/20 my-4" />
-                <p className="text-xs text-[#A0A0A0]">Issued on {new Date(certificate.issuedAt).toLocaleDateString()}</p>
+            {!certificate && (
+              <div className="mt-10">
+                <button
+                  onClick={handleGenerateCertificate}
+                  disabled={loading}
+                  className="px-8 py-3 bg-[#D4AF37] text-[#1A1A1A] rounded-xl font-bold text-sm uppercase tracking-wider hover:scale-[1.01] transition-transform disabled:opacity-50"
+                >
+                  {loading ? 'Generating...' : 'Generate Certificate'}
+                </button>
               </div>
-            ) : (
-              <button
-                onClick={handleGenerateCertificate}
-                disabled={loading}
-                className="w-full py-4 bg-[#D4AF37] text-[#1A1A1A] rounded-xl font-bold flex items-center justify-center gap-3 shadow-[0_20px_40px_rgba(212,175,55,0.2)] hover:scale-[1.02] transition-transform disabled:opacity-50"
-              >
-                <Award className="w-5 h-5" />
-                {loading ? 'Generating...' : 'Download Certificate'}
-              </button>
             )}
-          </motion.div>
-        )}
+
+            <section className="mt-12 pt-8 border-t border-[#D4AF37]/20">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-4 text-center md:text-left items-end">
+                <div>
+                  <p className="text-[10px] tracking-[0.2em] uppercase text-[#A0A0A0]">Authorized By</p>
+                  <p className="mt-2 text-sm text-[#F5F5DC]">HAMA Academy Instructor</p>
+                </div>
+
+                <div className="md:text-center">
+                  <p className="text-lg font-black text-[#D4AF37] tracking-[0.25em]">HAMA</p>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#A0A0A0]">Academy</p>
+                </div>
+
+                <div className="md:text-right">
+                  <p className="text-[10px] tracking-[0.2em] uppercase text-[#A0A0A0]">Date of Print</p>
+                  <p className="mt-2 text-sm text-[#F5F5DC]">{certificateDate}</p>
+                </div>
+              </div>
+
+              <p className="mt-6 text-[11px] text-[#A0A0A0] uppercase tracking-[0.16em]">
+                {certificate
+                  ? `Verification Code: ${certificate.uniqueCode}`
+                  : 'Verification code will appear once generated'}
+              </p>
+            </section>
+          </div>
+        </div>
+
+        <div className="flex justify-center mt-6">
+          <button
+            onClick={handleDownloadCertificate}
+            className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
+            style={{
+              background: 'linear-gradient(135deg, #D4AF37 0%, #F5D76E 50%, #D4AF37 100%)',
+              color: '#0f0f0f',
+              boxShadow: '0 4px 20px rgba(212,175,55,0.4)',
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download Certificate
+          </button>
+        </div>
 
         <button
           onClick={() => {
             reset();
             loadQuiz(quizId);
             setShowResult(false);
+            setCertificateNameInput('');
+            setIsCertificateNameConfirmed(false);
           }}
-          className="text-[#A0A0A0] hover:text-[#D4AF37] flex items-center justify-center gap-2 mx-auto mt-4 text-sm font-medium transition-colors"
+          className="text-[#A0A0A0] hover:text-[#D4AF37] flex items-center justify-center gap-2 mx-auto mt-6 text-sm font-medium transition-colors"
         >
           <RotateCcw className="w-4 h-4" />
           Take Quiz Again

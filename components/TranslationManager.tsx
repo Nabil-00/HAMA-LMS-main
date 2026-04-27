@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Globe, Plus, Trash2, Check, AlertTriangle, Languages } from 'lucide-react';
+import { Globe, Plus, Trash2, Check, AlertTriangle, Languages } from './icons/HamaUIIcons';
 
 interface TranslationManagerProps {
   supportedLocales: string[];

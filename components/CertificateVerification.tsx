@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Award, CheckCircle, XCircle, Search, Loader2 } from 'lucide-react';
+import { Award, CheckCircle, XCircle, Search, Loader2 } from './icons/HamaUIIcons';
 import { supabase } from '../supabaseClient';
 import { CertificateVerification } from '../types';
 

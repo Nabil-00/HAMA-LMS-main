@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { Users, BookOpen, GraduationCap, Clock, CheckSquare, Eye } from 'lucide-react';
+import { Eye } from './icons/HamaUIIcons';
 import { useAuth } from '../contexts/AuthContext';
 import { getUsers, getEnrollments } from '../services/userService';
 import { getCourses } from '../services/courseService';
@@ -9,6 +9,12 @@ import { supabase } from '../supabaseClient';
 import { User, Course, Enrollment } from '../types';
 import CertificatePreview from './CertificatePreview';
 import CourseList from './CourseList';
+import {
+  HamaCertificateIcon,
+  HamaCoursesIcon,
+  HamaProgressIcon,
+  HamaUserIcon,
+} from './icons';
 
 interface StatCardProps {
   title: string;
@@ -229,7 +235,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-8 md:space-y-12">
       <div className="mb-6 md:mb-12">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-hama-gold/5 border border-hama-gold/10 text-hama-gold text-xs font-bold uppercase tracking-[0.3em] mb-4">
+        <div className="inline-flex items-center px-3 py-1 rounded-full bg-hama-gold/5 border border-hama-gold/10 text-hama-gold text-xs font-bold uppercase tracking-[0.3em] mb-4">
           Barka da komowa
         </div>
         <h1 className="text-4xl md:text-5xl font-bold serif mb-4 text-text-primary">
@@ -242,21 +248,21 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {user?.role === 'Student' ? (
           <>
-            <StatCard title="Darussa Na" value={recentActivity.length} change="Aiki" icon={BookOpen} />
+            <StatCard title="Darussa Na" value={recentActivity.length} change="Aiki" icon={HamaCoursesIcon} />
             <StatCard
               title="Takardu"
               value={recentActivity.filter(a => a.status === 'Completed').length}
               change="Tabbatacce"
-              icon={GraduationCap}
+              icon={HamaCertificateIcon}
               onClick={() => setShowCertPreview(true)}
             />
           </>
         ) : (
           <>
-            <StatCard title={user?.role === 'Admin' ? "Matasan Jimlar" : "Matalikai Na"} value={stats.userCount} change="+5%" icon={Users} />
-            <StatCard title="Darussa Aiki" value={stats.courseCount} change="+2" icon={BookOpen} />
-            <StatCard title="Kammalawa" value={stats.rewardCount} change="+12%" icon={GraduationCap} onClick={() => setShowCertPreview(true)} />
-            <StatCard title="Aiki na Mako" value={stats.activeFlow} change="+4%" icon={Clock} />
+            <StatCard title={user?.role === 'Admin' ? "Matasan Jimlar" : "Matalikai Na"} value={stats.userCount} change="+5%" icon={HamaUserIcon} />
+            <StatCard title="Darussa Aiki" value={stats.courseCount} change="+2" icon={HamaCoursesIcon} />
+            <StatCard title="Kammalawa" value={stats.rewardCount} change="+12%" icon={HamaCertificateIcon} onClick={() => setShowCertPreview(true)} />
+            <StatCard title="Aiki na Mako" value={stats.activeFlow} change="+4%" icon={HamaProgressIcon} />
           </>
         )}
       </div>

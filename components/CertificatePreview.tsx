@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { Award, Download, Share2, Calendar, X } from 'lucide-react';
+import { Award, Download, Share2, Calendar, X } from './icons/HamaUIIcons';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import BrandLogo from './ui/BrandLogo';
 
 interface CertificateProps {
     studentName: string;
@@ -95,14 +96,14 @@ const CertificatePreview: React.FC<CertificateProps> = ({
             <div className="w-full max-w-5xl flex flex-col items-center py-10 print:py-0">
 
                 {/* Actions Header - Hidden in Print */}
-                <div className="w-full flex flex-col sm:flex-row justify-between items-center mb-6 md:mb-10 font-sans print:hidden gap-6">
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 md:w-12 md:h-12 bg-hama-gold/10 border border-hama-gold/20 rounded-xl flex items-center justify-center">
-                            <img src="/hama_logo.png" alt="H" className="w-6 h-6 md:w-8 md:h-8 object-contain" />
-                        </div>
+                    <div className="w-full flex flex-col sm:flex-row justify-between items-center mb-6 md:mb-10 font-sans print:hidden gap-6">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 md:w-12 md:h-12 bg-hama-gold/10 border border-hama-gold/20 rounded-xl flex items-center justify-center">
+                                <BrandLogo variant="icon" size="xs" />
+                            </div>
                         <div>
                             <h2 className="text-lg md:text-xl font-bold text-text-primary serif">Certification Earned</h2>
-                            <p className="text-xs md:text-[10px] text-text-muted uppercase tracking-[0.2em] font-black">Issued by Hausa Music Academy</p>
+                            <p className="text-xs md:text-[10px] text-text-muted uppercase tracking-[0.2em] font-black">Issued by HAMA Academy</p>
                         </div>
                     </div>
                     <div className="flex flex-wrap justify-center gap-3 md:gap-4">
@@ -161,7 +162,7 @@ const CertificatePreview: React.FC<CertificateProps> = ({
 
                         <div className="flex flex-col items-center order-first md:order-none">
                             <div className="w-20 h-20 md:w-28 md:h-28 border-4 border-double border-hama-gold/30 rounded-full flex items-center justify-center mb-2 md:mb-4 relative">
-                                <img src="/hama_logo.png" alt="Seal" className="w-14 h-14 md:w-20 md:h-20 object-contain brightness-0 contrast-200 opacity-90" />
+                                <BrandLogo variant="mono-dark" size="lg" className="h-14 md:h-20" />
                                 <div className="absolute inset-0 bg-hama-gold/5 rounded-full" />
                             </div>
                             <div className="text-[10px] md:text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] font-sans">{certificateId}</div>
@@ -177,8 +178,8 @@ const CertificatePreview: React.FC<CertificateProps> = ({
                     </div>
 
                     {/* Subtle Watermark */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.04] rotate-[-25deg] z-0">
-                        <img src="/hama_logo.png" alt="HAMA" className="w-[900px] grayscale brightness-0" />
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.08] rotate-[-25deg] z-0" aria-hidden="true">
+                        <BrandLogo variant="watermark" size="lg" className="h-auto w-[900px]" />
                     </div>
                 </div>
             </div>

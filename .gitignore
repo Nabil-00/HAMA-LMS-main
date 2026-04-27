@@ -24,3 +24,14 @@ dist-ssr
 *.sw?
 .vercel
 .env*.local
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Supabase local temp files
+supabase/.temp/
+
+# Archives
+*.tar.gz

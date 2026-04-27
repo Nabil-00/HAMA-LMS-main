@@ -1,13 +1,56 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { PDFDocument, rgb, StandardFonts } from 'https://esm.sh/pdf-lib@1.17.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Certificate layout configuration - adjust coordinates based on your Canva template
+// Template assumed: 1123 x 794 pixels (landscape, high-res)
+// PDF points: 1 point = 1/72 inch. For 300 DPI image: 1123 pixels = 1123*72/300 = 269.52 points
+const CERT_LAYOUT = {
+  // Name field - centered, large font
+  name: { x: 269, y: 340, maxWidth: 580, fontSize: 36, color: rgb(0.1, 0.1, 0.1) },
+  // Course name - centered, below name
+  course: { x: 269, y: 290, maxWidth: 580, fontSize: 24, color: rgb(0.2, 0.2, 0.2) },
+  // Date - bottom right
+  date: { x: 700, y: 100, fontSize: 14, color: rgb(0.3, 0.3, 0.3) },
+  // Certificate ID - bottom left
+  certificateId: { x: 80, y: 100, fontSize: 12, color: rgb(0.4, 0.4, 0.4) },
+}
+
 interface RequestBody {
   courseId: string;
   quizAttemptId?: string;
+}
+
+// Helper to scale font size for long text
+function scaleFontSize(text: string, maxWidth: number, baseSize: number, font: any, pageWidth: number): number {
+  let fontSize = baseSize
+  while (font.widthOfTextAtSize(text, fontSize) > maxWidth && fontSize > 10) {
+    fontSize -= 2
+  }
+  return fontSize
+}
+
+// Helper to wrap text if too long
+function wrapText(text: string, maxWidth: number, font: any, fontSize: number): string[] {
+  const words = text.split(' ')
+  const lines: string[] = []
+  let currentLine = ''
+
+  for (const word of words) {
+    const testLine = currentLine ? `${currentLine} ${word}` : word
+    if (font.widthOfTextAtSize(testLine, fontSize) <= maxWidth) {
+      currentLine = testLine
+    } else {
+      if (currentLine) lines.push(currentLine)
+      currentLine = word
+    }
+  }
+  if (currentLine) lines.push(currentLine)
+  return lines
 }
 
 Deno.serve(async (req) => {
@@ -98,7 +141,7 @@ Deno.serve(async (req) => {
     const courseTitle = courseRes.data?.title || 'Course'
 
     // Generate unique certificate code
-    const uniqueCode = `HAMA-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+    const uniqueCode = `HAMA-${new Date().getFullYear()}-${Date.now().toString(36).toUpperCase().slice(-6)}`
 
     // Check for existing certificate (avoid duplicates)
     const { data: existingCert } = await supabase
@@ -121,7 +164,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Create certificate record
+    // Create certificate record first
     const { data: certificate, error: certError } = await supabase
       .from('certificates')
       .insert({
@@ -140,96 +183,106 @@ Deno.serve(async (req) => {
       })
     }
 
-    // --- Phase 1: Generate PDF via render-certificate-pdf ---
+    // Generate PDF using pdf-lib
     const issuedDate = new Date().toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+      month: 'long'
     })
 
-    const internalSecret = Deno.env.get('INTERNAL_SECRET')
     let certificateUrl: string | null = null
 
-    if (!internalSecret) {
-      // INTERNAL_SECRET not configured — skip PDF generation gracefully.
-      // The certificate record is still created; URL will remain null.
-      console.warn('INTERNAL_SECRET is not set — skipping PDF generation. Set the secret and redeploy to enable PDF storage.')
-    } else {
-      try {
-        // Call the render-certificate-pdf sibling function.
-        // It lives at the same Supabase project, so we call it via the functions URL.
-        const renderUrl = `${supabaseUrl}/functions/v1/render-certificate-pdf`
+    try {
+      // Create PDF - Landscape letter size: 11 x 8.5 inches
+      const pdfDoc = await PDFDocument.create()
+      const page = pdfDoc.addPage([792, 612]) // 11 x 8.5 inches in points
 
-        const pdfResponse = await fetch(renderUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Internal-Secret': internalSecret,
-            // Pass the service-role key as apikey so the Functions gateway allows the call
-            'apikey': supabaseKey,
-          },
-          body: JSON.stringify({
-            recipientName: userName,
-            courseName: courseTitle,
-            completionDate: issuedDate,
-            uniqueCode: uniqueCode,
-            instructorName: 'HAMA Academy Management',
-          }),
+      // Embed fonts
+      const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+      const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica)
+
+      // Draw user name - centered, with auto-scaling
+      const nameSize = scaleFontSize(userName, CERT_LAYOUT.name.maxWidth, CERT_LAYOUT.name.fontSize, helveticaBold, 792)
+      const nameWidth = helveticaBold.widthOfTextAtSize(userName, nameSize)
+      page.drawText(userName, {
+        x: (792 - nameWidth) / 2,
+        y: CERT_LAYOUT.name.y,
+        size: nameSize,
+        font: helveticaBold,
+        color: CERT_LAYOUT.name.color,
+      })
+
+      // Draw course name - centered, with wrapping if needed
+      const courseLines = wrapText(courseTitle.toUpperCase(), CERT_LAYOUT.course.maxWidth, helvetica, CERT_LAYOUT.course.fontSize)
+      let courseY = CERT_LAYOUT.course.y
+      for (const line of courseLines) {
+        const lineWidth = helvetica.widthOfTextAtSize(line, CERT_LAYOUT.course.fontSize)
+        page.drawText(line, {
+          x: (792 - lineWidth) / 2,
+          y: courseY,
+          size: CERT_LAYOUT.course.fontSize,
+          font: helvetica,
+          color: CERT_LAYOUT.course.color,
+        })
+        courseY -= (CERT_LAYOUT.course.fontSize + 8)
+      }
+
+      // Draw date - bottom right
+      page.drawText(issuedDate, {
+        x: CERT_LAYOUT.date.x,
+        y: CERT_LAYOUT.date.y,
+        size: CERT_LAYOUT.date.fontSize,
+        font: helvetica,
+        color: CERT_LAYOUT.date.color,
+      })
+
+      // Draw certificate ID - bottom left
+      page.drawText(`Certificate ID: ${uniqueCode}`, {
+        x: CERT_LAYOUT.certificateId.x,
+        y: CERT_LAYOUT.certificateId.y,
+        size: CERT_LAYOUT.certificateId.fontSize,
+        font: helvetica,
+        color: CERT_LAYOUT.certificateId.color,
+      })
+
+      // Save PDF
+      const pdfBytes = await pdfDoc.save()
+
+      // Upload to Supabase Storage
+      const storagePath = `${user.id}/${uniqueCode}.pdf`
+
+      const { error: uploadError } = await supabase
+        .storage
+        .from('certificates')
+        .upload(storagePath, pdfBytes, {
+          contentType: 'application/pdf',
+          upsert: false,
         })
 
-        if (!pdfResponse.ok) {
-          const errText = await pdfResponse.text()
-          console.error(`render-certificate-pdf returned ${pdfResponse.status}: ${errText}`)
-          // Non-fatal: continue and return null certificateUrl
-        } else {
-          const pdfBytes = await pdfResponse.arrayBuffer()
+      if (uploadError) {
+        console.error('Storage upload failed:', uploadError.message)
+      } else {
+        // Get public URL
+        const { data: urlData } = supabase
+          .storage
+          .from('certificates')
+          .getPublicUrl(storagePath)
 
-          // Upload the PDF to the 'certificates' storage bucket.
-          // Path: {userId}/{uniqueCode}.pdf
-          // The service-role key bypasses all RLS policies on storage.
-          const storagePath = `${user.id}/${uniqueCode}.pdf`
+        certificateUrl = urlData?.publicUrl ?? null
 
-          const { error: uploadError } = await supabase
-            .storage
+        // Update certificate record with URL
+        if (certificateUrl) {
+          await supabase
             .from('certificates')
-            .upload(storagePath, pdfBytes, {
-              contentType: 'application/pdf',
-              upsert: false, // unique code guarantees no collision, but be explicit
-            })
-
-          if (uploadError) {
-            console.error('Storage upload failed:', uploadError.message)
-            // Non-fatal — certificate record still exists
-          } else {
-            // Get the public URL of the uploaded PDF
-            const { data: urlData } = supabase
-              .storage
-              .from('certificates')
-              .getPublicUrl(storagePath)
-
-            certificateUrl = urlData?.publicUrl ?? null
-
-            // Update the certificate record with the storage URL
-            if (certificateUrl) {
-              const { error: updateError } = await supabase
-                .from('certificates')
-                .update({ certificate_url: certificateUrl })
-                .eq('id', certificate.id)
-
-              if (updateError) {
-                console.error('Failed to update certificate_url in DB:', updateError.message)
-                // Certificate URL is still returned to client even if DB update fails
-              }
-            }
-          }
+            .update({ certificate_url: certificateUrl })
+            .eq('id', certificate.id)
         }
-      } catch (pdfErr) {
-        // PDF generation is non-fatal: certificate still exists in DB without a URL
-        console.error('PDF generation pipeline error:', pdfErr)
       }
+    } catch (pdfErr) {
+      console.error('PDF generation error:', pdfErr)
+      // Continue - certificate record exists even without PDF
     }
 
-    // Return certificate data including the storage URL (may be null if PDF gen failed/not configured)
+    // Return certificate data
     return new Response(JSON.stringify({
       success: true,
       certificateId: certificate.id,

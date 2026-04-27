@@ -92,7 +92,7 @@ CREATE POLICY "Maestros can manage courses" ON public.courses FOR ALL USING (EXI
 -- Enrollments: Users can see their own, Admins see all
 CREATE POLICY "Users can view own enrollments" ON public.enrollments FOR SELECT USING (auth.uid() = user_id OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'Admin'));
 CREATE POLICY "Admins can manage enrollments" ON public.enrollments FOR ALL USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'Admin'));
-CREATE POLICY "Students can enroll themselves" ON public.enrollments FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Service role inserts enrollments" ON public.enrollments FOR INSERT WITH CHECK (auth.role() = 'service_role');
 
 -- --- CRON JOB (pg_cron) ---
 -- To enable this, go to Database -> Extensions in Supabase and enable "pg_cron".
@@ -130,8 +130,9 @@ CREATE TABLE public.payments (
   amount NUMERIC NOT NULL,
   currency TEXT DEFAULT 'NGN',
   reference TEXT UNIQUE NOT NULL,
+  gateway TEXT DEFAULT 'paystack',
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'success', 'failed', 'refunded')),
-  paystack_response JSONB,
+  gateway_response JSONB,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -140,8 +141,8 @@ ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 
 -- Payments: Users can view own payments, system handles inserts
 CREATE POLICY "Users can view own payments" ON public.payments FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Anyone can insert payments" ON public.payments FOR INSERT WITH CHECK (true);
-CREATE POLICY "Users can update own payments" ON public.payments FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Service role inserts payments" ON public.payments FOR INSERT WITH CHECK (auth.role() = 'service_role');
+CREATE POLICY "Service role updates payments" ON public.payments FOR UPDATE USING (auth.role() = 'service_role');
 
 -- --- PERFORMANCE INDEXES ---
 CREATE INDEX IF NOT EXISTS idx_courses_author_id ON public.courses(author_id);
@@ -245,4 +246,3 @@ CREATE POLICY "Public Access for course-assets"
 ON storage.objects FOR ALL
 USING (bucket_id = 'course-assets')
 WITH CHECK (bucket_id = 'course-assets');
-

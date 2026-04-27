@@ -4,7 +4,7 @@ import {
   Plus, Trash2, Edit3, Check, X, Upload,
   ChevronDown, ChevronUp, AlertCircle, Loader2, Eye, EyeOff,
   FileText, Download
-} from 'lucide-react';
+} from './icons/HamaUIIcons';
 import { adminQuizService } from '../services/quizService';
 import { Quiz, Question, QuestionStatus } from '../types';
 

@@ -2,6 +2,8 @@ export interface PaystackConfig {
     key: string;
     email: string;
     amount: number;
+    reference: string;
+    currency?: string;
     metadata: {
         courseId: string;
         userId: string;
@@ -20,7 +22,8 @@ export const initializePaystack = (config: PaystackConfig) => {
         key: config.key,
         email: config.email,
         amount: config.amount * 100, // Paystack expects amount in Kobo
-        currency: 'NGN',
+        currency: config.currency || 'NGN',
+        ref: config.reference,
         metadata: config.metadata,
         callback: (response: any) => {
             config.onSuccess(response);

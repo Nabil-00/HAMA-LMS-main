@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { X, CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { X, CheckCircle, AlertCircle, Info } from './icons/HamaUIIcons';
 
 export type ToastType = 'success' | 'error' | 'info';
 

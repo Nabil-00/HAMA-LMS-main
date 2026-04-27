@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Maximize2, Play, Volume2, Shield } from 'lucide-react';
+import { Maximize2, Play, Volume2, Shield } from './icons/HamaUIIcons';
 
 interface VideoPlayerProps {
     youtubeId: string;

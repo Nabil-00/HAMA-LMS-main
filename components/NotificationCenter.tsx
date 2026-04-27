@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, CheckCheck, X, MessageSquare, Info, AlertTriangle, CheckCircle2, Link as LinkIcon, ExternalLink } from 'lucide-react';
+import { Bell, CheckCheck, X, MessageSquare, Info, AlertTriangle, CheckCircle2, Link as LinkIcon, ExternalLink } from './icons/HamaUIIcons';
 import { useAuth } from '../contexts/AuthContext';
 import { Notification } from '../types';
 import { getNotifications, markAsRead, markAllAsRead, subscribeToNotifications } from '../services/notificationService';

@@ -14,11 +14,12 @@ import {
   ShieldAlert,
   Users,
   ChevronRight
-} from 'lucide-react';
+} from './icons/HamaUIIcons';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types';
 import NotificationCenter from './NotificationCenter';
 import { useToast } from './Toast';
+import BrandLogo from './ui/BrandLogo';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -47,18 +48,32 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, [user, navigate]);
 
   const navItems: NavItem[] = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard, allowedRoles: ['Admin', 'Teacher', 'Student'] },
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, allowedRoles: ['Admin', 'Teacher', 'Student'] },
     { name: 'Courses', path: '/courses', icon: BookOpen, allowedRoles: ['Admin', 'Teacher', 'Student'] },
-    { name: 'Course Studio', path: '/create', icon: PenTool, allowedRoles: ['Admin', 'Teacher'] },
+    { name: 'Course Builder', path: '/create', icon: PenTool, allowedRoles: ['Admin', 'Teacher'] },
     { name: 'Users', path: '/users', icon: Users, allowedRoles: ['Admin'] },
     { name: 'Reports', path: '/analytics', icon: BarChart3, allowedRoles: ['Admin', 'Teacher'] },
     { name: 'Settings', path: '/settings', icon: Settings, allowedRoles: ['Admin'] },
   ];
 
+  const pageTitles: Record<string, string> = {
+    '/dashboard': 'Dashboard',
+    '/courses': 'Courses',
+    '/create': 'Course Builder',
+    '/users': 'Users',
+    '/analytics': 'Reports',
+    '/settings': 'Settings',
+  };
+
+  const currentPageTitle =
+    Object.entries(pageTitles).find(([path]) =>
+      location.pathname === path || location.pathname.startsWith(`${path}/`)
+    )?.[1] || 'Dashboard';
+
   const searchInputClass = "w-64 pl-10 pr-4 py-2 text-sm bg-[#D4AF37]/5 border border-[#D4AF37]/10 rounded-full focus:outline-none focus:border-[#D4AF37] transition-all text-[#F5F5DC] placeholder-[#666666]";
 
   return (
-    <div className="flex h-screen bg-[#1A1A1A] text-[#F5F5DC] overflow-hidden selection:bg-[#D4AF37] selection:text-[#1A1A1A]">
+    <div className="relative flex h-screen bg-[#1A1A1A] text-[#F5F5DC] overflow-hidden selection:bg-[#D4AF37] selection:text-[#1A1A1A]">
       {/* Progress Bar */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#046307] via-[#D4AF37] to-[#046307] z-[100] origin-left shadow-[0_0_15px_rgba(4,99,7,0.5)]"
@@ -67,16 +82,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Background Effects */}
       <div className="noise" />
-      <motion.div
-        animate={{ scale: [1, 1.4, 1], rotate: [0, 90, 0], x: [0, 50, 0] }}
-        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-[15%] -left-32 w-[30rem] h-[30rem] bg-[#046307] blur-[180px] rounded-full opacity-20 pointer-events-none"
-      />
-      <motion.div
-        animate={{ scale: [1, 1.2, 1], rotate: [0, -45, 0], y: [0, 100, 0] }}
-        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute bottom-[20%] -right-32 w-[35rem] h-[35rem] bg-[#D4AF37] blur-[200px] rounded-full opacity-10 pointer-events-none"
-      />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          animate={{ scale: [1, 1.4, 1], rotate: [0, 90, 0], x: [0, 50, 0] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[15%] -left-28 h-[22rem] w-[22rem] md:-left-32 md:h-[30rem] md:w-[30rem] bg-[#046307] blur-[180px] rounded-full opacity-20"
+        />
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], rotate: [0, -45, 0], y: [0, 100, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-[20%] -right-28 h-[24rem] w-[24rem] md:-right-32 md:h-[35rem] md:w-[35rem] bg-[#D4AF37] blur-[200px] rounded-full opacity-10"
+        />
+      </div>
 
       {/* Sidebar */}
       <>
@@ -95,30 +112,28 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         `}
           style={{ backgroundColor: 'rgba(26, 26, 26, 0.95)', backdropFilter: 'blur(24px)' }}
         >
-          <div className={`p-6 mb-4 flex items-center ${isSidebarCollapsed ? 'justify-center p-4' : 'p-8'}`}>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              onClick={() => navigate('/')}
-              className="flex items-center gap-4 group cursor-pointer"
-            >
-              <div className={`rounded-2xl bg-[#D4AF37] flex items-center justify-center shadow-[0_20px_60px_rgba(212,175,55,0.4)] transition-all ${isSidebarCollapsed ? 'w-10 h-10' : 'w-14 h-14'}`}>
-                <span className={`font-black tracking-tighter text-[#1A1A1A] ${isSidebarCollapsed ? 'text-xl' : 'text-2xl'}`}>H</span>
-              </div>
-              <AnimatePresence>
-                {!isSidebarCollapsed && (
-                  <motion.div
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <h1 className="text-[14px] font-black text-[#F5F5DC] uppercase tracking-[0.2em] font-sans">HAMA</h1>
-                    <p className="text-[9px] text-[#D4AF37]/60 font-bold uppercase tracking-[0.2em] mt-0.5">Student Portal</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </div>
+          {isSidebarCollapsed ? (
+            <div className="flex justify-center items-center py-5 px-2">
+              <BrandLogo
+                variant="icon"
+                size="sm"
+                glow
+                plate
+                alt="HAMA"
+              />
+            </div>
+          ) : (
+            <div className="flex items-center px-5 py-5">
+              <BrandLogo
+                variant="full"
+                size="lg"
+                glow
+                clickable
+                href="/dashboard"
+                alt="HAMA Academy"
+              />
+            </div>
+          )}
 
           {/* User Badge */}
           <div className={`px-4 py-6 ${isSidebarCollapsed ? 'px-2' : 'px-6'}`}>
@@ -238,6 +253,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             >
               <Menu size={20} />
             </button>
+            <div className="inline-flex items-center gap-2 pl-1">
+              <div className="md:hidden">
+                <BrandLogo variant="icon" size="sm" glow clickable href="/dashboard" alt="HAMA" />
+              </div>
+              <span className="hidden md:block text-[10px] uppercase tracking-[0.2em] font-black text-[#D4AF37]/80">
+                {currentPageTitle}
+              </span>
+            </div>
             <div className="relative hidden lg:block">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4AF37]/40" size={16} />
               <input

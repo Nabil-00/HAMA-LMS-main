@@ -123,14 +123,11 @@ const Login = () => {
                </motion.div>
 
                 <motion.h1 variants={itemVariants} className="text-6xl font-black text-[#F5F5DC] mb-8 tracking-tight leading-tight serif text-center">
-                   Shiga cikin <br />
-                   <span className="bg-gradient-to-r from-[#D4AF37] via-[#F5F5DC] to-[#D4AF37] bg-clip-text text-transparent bg-[length:200%_auto] animate-shimmer-fast">
-                      Gida
-                   </span>
+                   Shiga Duniyar Ilimi
                 </motion.h1>
 
                 <motion.p variants={itemVariants} className="text-xl text-[#F5F5DC]/60 max-w-lg mx-auto leading-[1.3]">
-                   Koyi yin kiɗa daga malaman kiɗa na Arewa.
+                   Darussa na zamani, cikin sauƙi da inganci.
                 </motion.p>
 
                 <motion.div variants={itemVariants} className="grid grid-cols-2 gap-8 mt-16">
@@ -138,13 +135,13 @@ const Login = () => {
                       <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20">
                          <HamaCertificateIcon size={20} variant="gold" aria-hidden />
                       </div>
-                      <span className="text-[10px] font-black uppercase tracking-[0.3em]">Tabbatacce</span>
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em]">Darussa</span>
                    </div>
                    <div className="flex items-center gap-4 text-[#666666]">
                       <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20">
                          <HamaUserIcon size={20} variant="gold" aria-hidden />
                       </div>
-                      <span className="text-[10px] font-black uppercase tracking-[0.3em]">Duniya</span>
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em]">Takardu</span>
                    </div>
                 </motion.div>
             </div>
@@ -189,7 +186,7 @@ const Login = () => {
                                value={email}
                                onChange={(e) => setEmail(e.target.value)}
                                className="w-full pl-14 pr-6 py-5 bg-[#F5F5DC]/5 border border-[#D4AF37]/10 rounded-2xl focus:border-[#D4AF37] outline-none text-[#F5F5DC] transition-all placeholder:text-[#666666]/30 text-sm font-medium"
-                               placeholder="artist@hama.com"
+                               placeholder="user@hama.com"
                                required
                             />
                          </div>
